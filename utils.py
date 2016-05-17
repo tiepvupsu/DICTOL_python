@@ -1275,7 +1275,7 @@ def DLSI_top(dataset, n_c, k, alambda, eta):
         os.makedirs(path)
     t = get_time_str()
     fn = os.path.join('results', 'DLSI', dataset + '_N_'+ str(n_c) + \
-        '_k_' + str(k) + '_l_' + str(lambda) + '_e_' + str(eta) + '_' + t \
+        '_k_' + str(k) + '_l_' + str(alambda) + '_e_' + str(eta) + '_' + t \
         + '.pickle')
     output_file = open(fn, 'w+')
     ## Prepare parameters
