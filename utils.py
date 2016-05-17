@@ -320,8 +320,10 @@ def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
     ADMM: D,J = argmin_DJ 0.5*||Y - DX||_F^2 + lambdaD||J||_*
     s.t ||d_i||_2^2 <= 1 and J = D
     Alternatively solving:
-    (1): D^{k+1} = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U^k||_F^2 s.t. ||d_i||_2^2 <= 1
-        this problem can be soved using the update dictionary stage in Online Dictionary Learning method
+    (1): D^{k+1} = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U^k||_F^2 
+    	s.t. ||d_i||_2^2 <= 1
+        this problem can be soved using the update dictionary stage in 
+        	Online Dictionary Learning method
     (2): J^{k+1} = argminJ lambdaD||J||_* + rho/2||J - D^{k+1} + U^k||
         Solution: shrinkage_rank(D^{k+1} - U^k, lambdaD/rho)
     (3): Update U: U^{k+1} = U^k + J^{k+1} - D^{k+1}
@@ -1701,7 +1703,6 @@ def LRSDL_top(dataset, n_c, k, k0, lambda1, lambda2, lambda3):
     close(output_file)
 
 def LRSDL_top_test():
-
     LRSDL_top(dataset, N_train, k, k0, lambda1, lambda2, lambda3)
     
 
@@ -1738,7 +1739,7 @@ if test:
     # check_grad_test()
     # LRSDL_test()
     # buildMhat_test()
-    LRSDL_top('myFlower', 10, 8, 5, 0.01, 0.1, .1)
+    LRSDL_top('myARgender', 50, 20, 5, 0.001, 0.01, .1)
     # min_rank_dict0_test()
     # repmat_test()
     # build_mean_matrix_test()
