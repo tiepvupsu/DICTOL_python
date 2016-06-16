@@ -5,8 +5,10 @@ import cPickle
 import math 
 import time 
 from time import strftime
+# from six.moves import cPickle as pickle
 import os 
 import io 
+import scipy.io as sio
 # import theano.tensor as T
 # from theano import function
 
@@ -352,7 +354,8 @@ def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
     while it < opts.max_iter:
         it += 1 
         ## =========update D ================================
-        # D = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U||_F^2 s.t. ||d_i||_2^2 <= 1
+        # D = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U||_F^2 
+        # s.t. ||d_i||_2^2 <= 1
         E = YXt + rho*(J_old + U_old)
         F = XXt + rho*I
         # D_new = updateD_EF(D_old, E, F, 10);
@@ -527,7 +530,7 @@ class Opts:
     """ 
     def __init__(self, tol = 1e-8, max_iter = 100, show_cost = False,\
         test_mode = False, lambda1 = None, lambda2 = None, lambda3 = None, \
-        eta = None, check_grad = False):
+        eta = None, check_grad = False, verbal = False):
         self.tol        = tol 
         self.max_iter   = max_iter 
         self.show_cost  = show_cost 
@@ -536,6 +539,7 @@ class Opts:
         self.lambda1    = lambda1 
         self.lambda2    = lambda2 
         self.lambda3    = lambda3 
+        self.verbal     = verbal
 
     def copy(self):
         opts = Opts()
@@ -781,10 +785,13 @@ def pickDfromY_test():
     print D 
 
 def myload(filename):
+    import testPickle 
     # A = sio.loadmat(filename)
-    with open(r""+filename, "rb") as input_file:
-        A = cPickle.load(input_file)
-    return A 
+    # with open(filename, 'rb') as input_file:
+    #     A = cPickle.load(input_file)
+        # A = pickle.load(input_file)
+    # return A 
+    return testPickle.pickle_load(filename)
     # print A['label_test']
 
 def SRC_pred(Y, D, D_range, lambda1, opts):
@@ -831,46 +838,9 @@ def SRC_pred(Y, D, D_range, lambda1, opts):
 
     return pred 
 
-
-# def picktrntst(Y, Y_range, N_trc_c):
-#   """
-#   Description : pick training set and test set from data
-#       INPUT:
-#       Y: data (each column is an observation)
-#       label: label of data (start from 1 to C - nmber of class)
-#       N_trn_c: number of training samples in each class
-#       OUTPUT: 
-#       Y_trn: picked training data 
-#       label_trn: label of training data 
-#       Y_tst: test data 
-#       label_tst: test label
-#   -----------------------------------------------
-#   Author: Tiep Vu, thv102@psu.edu, 4/16/2016
-#           (http://www.personal.psu.edu/thv102/)
-#   -----------------------------------------------
-#   """
-
-
-
-#   return (Y_trn, label_trn, Y_tst, label_tst)
-
-# def picktrntst_wrapper(dataset, N_trn):
-#   """
-#   Pick N_trn samples from each class in `dataset`
-#   """ 
-#   data_fn = os.path.join('data', dataset + '.mat')
-#   Vars = myload(data_fn)
-#   if 'Y_range' not in Vars:
-#       Y_range = label_to_range(Vars['label'])
-#   else:
-#       Y_range = Vars['Y_range']
-#   Y = normc(Vars['Y'])
-#   return picktrntst(Y, Y_range, N_trn)
-    # pass
-    # print D_range 
-##############test 
 def pickTrainTest(dataset, N_train_c):
-    data_fn = os.path.join('data', dataset + '.pickle')
+    # data_fn = os.path.join('data', dataset + '.pickle')
+    data_fn = os.path.join('data', dataset + '.mat')
     Vars = myload(data_fn)
     Y = Vars['Y']
     d = Y.shape[0]
@@ -885,11 +855,10 @@ def pickTrainTest(dataset, N_train_c):
     N_train     = C*N_train_c 
     N_test      = N_total - N_train 
     
-    Y_train     = np.zeros((d, N_train) )
+    Y_train     = np.zeros((d, N_train))
     Y_test      = np.zeros((d, N_test))
     label_train = np.zeros((1, N_train))
-    label_test  = np.zeros((1, N_test)
-)    
+    label_test  = np.zeros((1, N_test))    
     cur_train   = 0 
     cur_test    = 0 
     for c in xrange(C):
@@ -1520,8 +1489,8 @@ def LRSDL_init(Y, Y_range, D_range_ext, opts):
     optsODL = Opts(max_iter = 50, tol = 1e-8)
     for c in xrange(C):
         Yc = get_block_col(Y, c, Y_range)
-        D[:, D_range_ext[c]:D_range_ext[c+1]], Xcc = ODL(Yc, D_range_ext[c+1] -\
-            D_range_ext[c], opts.lambda1, optsODL)
+        D[:, D_range_ext[c]:D_range_ext[c+1]], Xcc = \
+            ODL(Yc, D_range_ext[c+1] -  D_range_ext[c], opts.lambda1, optsODL)
         X[D_range_ext[c]:D_range_ext[c+1], Y_range[c]:Y_range[c+1]] = \
             Xcc.copy()
     ## shared dictionary 
