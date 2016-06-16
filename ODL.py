@@ -101,5 +101,5 @@ def ODL_test():
 	opts = Opts(show_cost = True, max_iter = 100)
 	ODL_main(Y, k, lambda1, opts)
 
-ODL_test()
+# ODL_test()
 
