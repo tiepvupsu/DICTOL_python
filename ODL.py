@@ -30,23 +30,23 @@ def ODL_updateD(D, E, F, opts):
 	"""
 	D_old = D.copy() 
 	it = 0 
-	k = D.shape[1] 
+	sizeD = numel(D)
 	while it < opts.max_iter:
 		it = it + 1 
-		for i in xrange(k):
+		for i in xrange(D.shape[1]):
 			if F[i,i] != 0:
-				a = (E[:, i] - D.dot(F[:, i])/F[i,i] + D[:, i])
+				a = 1.0/F[i,i] * (E[:, i] - D.dot(F[:, i])) + D[:, i]
 				D[:,i] = a/max(LA.norm(a, 2), 1)
-		if LA.norm(D - D_old, 'fro') < opts.tol:
+		if LA.norm(D - D_old, 'fro')/sizeD < opts.tol:
 			break 
 		D_old = D 
 	return (D, it) 
 
-def ODL_main(Y, k, lambda1, opts, method = 'fista'):
+def ODL(Y, k, lambda1, opts, method = 'fista'):
 	"""
 	* Solving the following problem:
 	 (D, X) = \arg\min_{D,X} 0.5||Y - DX||_F^2 + lambda1||X||_1
-	* Syntax: `(D, X) = ODL_main(Y, k, lambda1, opts)`
+	* Syntax: `(D, X) = ODL(Y, k, lambda1, opts)`
 	  - INPUT: 
 	    + `Y`: collection of samples.4/7/2016 7:35:39 PM
 	    + `k`: number of atoms in the desired dictionary.
@@ -62,44 +62,53 @@ def ODL_main(Y, k, lambda1, opts, method = 'fista'):
 	        (http://www.personal.psu.edu/thv102/)
 	-----------------------------------------------
 	"""
+	from utils import *
 	Y_range = np.array([0, Y.shape[1]])
 	D_range = np.array([0, k])
 	D = pickDfromY(Y, Y_range, D_range)
 	X = np.zeros((D.shape[1], Y.shape[1]))
-	print 'Initial cost: %5.4f' % ODL_cost(Y, D, X, lambda1) 
+	if opts.verbal: 
+		print 'Initial cost: %5.4f' % ODL_cost(Y, D, X, lambda1)
 	it = 0 
 	optsX = Opts(max_iter = 300)
 	optsD = Opts(max_iter = 200, tol = 1e-8)
 	while it < opts.max_iter:
 		it += 1 
 		# Sparse coding 
-		if method == 'fista':
-			X, itx = lasso_fista(Y, D, X, lambda1, optsX)
-		if opts.show_cost: 
+		X = lasso_fista(Y, D, X, lambda1, optsX)[0]
+		# X = X0[0]
+		if opts.verbal: 
 			costX = ODL_cost(Y, D, X, lambda1)
-			print 'iter: %3d' % it, 'costX = %4.4f' % costX, 'it: ', itx
-		# Dictionary update 
+			print 'iter: %3d' % it, '| costX = %4.4f' % costX #'it: ', itx
+		# Dictionary update
 		F = np.dot(X, X.T)
 		E = np.dot(Y, X.T) 
 		D, itd = ODL_updateD(D, E, F, optsD)
-		if opts.show_cost:
+		if opts.verbal:
 			costD = ODL_cost(Y, D, X, lambda1)
-			print 'iter: %3d' % it, 'costD = %4.4f' % costD, 'it: ', itd
+			print '          | costD = %4.4f' % costD #'it: ', itd
 			if abs(costX - costD) < opts.tol:
 				break 
-	print 'Final cost: %4.4f' % ODL_cost(Y, D, X, lambda1)
+	if opts.verbal:
+		print 'Final cost: %4.4f' % ODL_cost(Y, D, X, lambda1)
 	return (D, X)		
 
+class Opts_ODL:
+	def __init__(self, verbal = False, max_iter = 100, tol = 1e-8):
+		self.verbal   = verbal
+		self.max_iter = max_iter
+		self.tol      = tol
+
 def ODL_test():
-	d      = 50 # data dimension
-	N      = 10 # number of samples 
-	k      = 5 # dictionary size 
+	d      = 500 # data dimension
+	N      = 1000 # number of samples 
+	k      = 50 # dictionary size 
 	lambda1 = 0.1
 	Y      = normc(np.random.rand(d, N))
 	D      = normc(np.random.rand(d, k))
 	# Xinit  = np.zeros(D.shape[1], Y.shape[1])
-	opts = Opts(show_cost = True, max_iter = 100)
-	ODL_main(Y, k, lambda1, opts)
+	opts = Opts_ODL(max_iter = 100, tol = 1e-8, verbal = True)
+	ODL(Y, k, lambda1, opts)
 
 # ODL_test()
 

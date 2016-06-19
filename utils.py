@@ -1,5 +1,6 @@
-import numpy as np 
-from numpy import linalg as LA
+# import numpy as np 
+# from numpy import linalg as LA
+from matlab_syntax import *
 # import scipy.io as sio
 import cPickle
 import math 
@@ -10,56 +11,14 @@ import os
 import io 
 import scipy.io as sio
 import pickle
-# import theano.tensor as T
-# from theano import function
-
-# x = T.dmatrix('x')
-# y = T.dmatrix('y')
-# z = T.dot(x, y)
-# mydot = function([x, y], z)
-
-
-
-
-
-
-# TODO
+from ODL import *
 test = True 
 # test = False 
 
-def repmat(A, rows, cols):
-    """
-
-    :param A:
-    :param rows:
-    :param cols:
-    :return:
-    """
-    return np.tile(A, (cols, rows)).T
-
-def repmat_test():
-    print '------------------------------------\n'
-    print 'Test `repmat`:'
-    a = np.array([1, 2])
-    rows = 2
-    cols = 3 
-    A = repmat(a, rows, cols)
-    print 'a = ', a 
-    print 'rows = %d,' %rows, 'cols = %d' %cols 
-    print A 
 
 def get_time_str():
     print 'Time now: ' + strftime("%m/%d/%Y %H:%M:%S")
     return strftime("%m%d_%H%M%S")
-
-# print get_time_str()
-
-
-def numel(A):
-    """
-    return number of elements of a numpy array 
-    """
-    return A.size 
 
 def myreshape(x, c, r):
     return x.reshape(c, r, order = 'F').copy()
@@ -87,7 +46,6 @@ def label_to_range_test():
     print "range = ", label_to_range(label)
     # ouput should be [0, 3, 7, 9]
     # pass 
-
 
 def range_to_label(arange):
     """
@@ -183,24 +141,6 @@ def get_block_test():
         get_block(A, 1, 2, row_range, col_range)
 
 
-def vec(A):
-    """
-    * Syntax: `a = vec(A)`
-    * Vectorization of a matrix. This function is a built-in function in some 
-    recent MATLAB version.
-    """
-    # pass
-    # return A.reshape((-1, 1), order = 'F')
-    return A.flatten(1)
-    # x.reshape(c, r, order = 'F')
-    # return np.reshape(A.flatten('F'), A.size, , order = 'F')
-
-def vec_test():
-    print('---------------------------------------')
-    print('`vector` test:')
-    A = np.random.randint(5, size = (3, 3))
-    print "A = \n", A
-    print "vec(A) = \n", vec(A) , vec(A).shape
 
 def norm1(X):
     """
@@ -270,9 +210,7 @@ def shrinkage(U, alambda):
     positive a scalar or a positive matrix (all elements are positive) with 
     same size as `X`. In the latter case, it is a weighted problem.
     """
-    # pass 
     return np.maximum(0, U - alambda) + np.minimum(0, U + alambda)
-    # np.maximum()
 
 def shrinkage_test():
     pass 
@@ -302,87 +240,6 @@ def shrinkage_rank_test():
     print '    6.9302    7.9498    8.9693'
     print shrinkage_rank(D, alambda)
 
-def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
-    """
-    This function try to solve the following problem:
-    [D] = argmin_D 0.5*|| Y - DX||_F^2 + lambdaD ||D||_*
-    s.t. ||d_i||_2^2 <= 1, for all i 
-    using ADMM:
-    INPUT: 
-        Y: Data 
-        Dinit: intitial D 
-        X: sparse code  
-        lambdaD: regularization term 
-    OUTPUT: 
-        D: 
-    Created: Tiep Vu 6/29/2015 2:05:28 PM
-    ------------------------
-    Choose a rho.
-    Algorithm summary
-    ADMM: D,J = argmin_DJ 0.5*||Y - DX||_F^2 + lambdaD||J||_*
-    s.t ||d_i||_2^2 <= 1 and J = D
-    Alternatively solving:
-    (1): D^{k+1} = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U^k||_F^2 
-    	s.t. ||d_i||_2^2 <= 1
-        this problem can be soved using the update dictionary stage in 
-        	Online Dictionary Learning method
-    (2): J^{k+1} = argminJ lambdaD||J||_* + rho/2||J - D^{k+1} + U^k||
-        Solution: shrinkage_rank(D^{k+1} - U^k, lambdaD/rho)
-    (3): Update U: U^{k+1} = U^k + J^{k+1} - D^{k+1}
-
-    Stoping cretia:
-    ||r^k||_F^2 <= tol, ||s^k||_F^2 <= tol 
-    r^k = J^k - D^k 
-    s^k = rho(J^{k+1} - J^k) 
-    ---------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 04/22/2016
-            http://www.personal.psu.edu/thv102/
-    ---------------------------------------------
-    """
-    YXt = np.dot(Y, X.T)
-    XXt = np.dot(X, X.T)
-    rho = 0.25 
-    D_old = Dinit 
-    J_old = Dinit 
-    U_old = np.zeros_like(Dinit)
-    it = 0 
-    I = np.eye(XXt.shape[0])
-    tau = 2 
-    mu = 10.0 
-    optsD = opts 
-    optsD.max_iter = 50
-    while it < opts.max_iter:
-        it += 1 
-        ## =========update D ================================
-        # D = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U||_F^2 
-        # s.t. ||d_i||_2^2 <= 1
-        E = YXt + rho*(J_old + U_old)
-        F = XXt + rho*I
-        # D_new = updateD_EF(D_old, E, F, 10);
-        D_new = ODL_updateD(D_old, E, F, optsD)[0]
-        ## ========= update J ==============================
-        # J^{k+1} = argminJ lambdaD||J||_* + rho/2||J - D + U||
-        J_new = np.real(shrinkage_rank(D_new - U_old, lambdaD/rho))
-
-        ## ========= update U ==============================
-        U_new = U_old + J_new - D_new
-        
-        ## ========= check stop ==============================
-        r = J_new - D_new
-        s = rho*(J_new - J_old)
-        r_eps = LA.norm(r, 'fro')
-        s_eps = LA.norm(s, 'fro')   
-        if r_eps < opts.tol and s_eps < opts.tol:
-            break
-        D_old = D_new
-        J_old = J_new
-        U_old = U_new
-        if r_eps > mu*s_eps:
-            rho = rho*tau
-        elif s_eps > mu*r_eps:
-            rho = rho/tau
-
-    return D_new 
 
 def min_rank_dict0_test():
     print '------------------------------------'
@@ -451,7 +308,7 @@ def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F):
         x_old = x_new 
         t_old = t_new 
         y_old = y_new 
-        if opts.test_mode:
+        if opts.verbal:
             cost_new = fn_calc_F(x_new)
             if cost_new <= cost_old:
                 stt = 'YES.'
@@ -495,23 +352,10 @@ def lasso_fista(Y, D, Xinit, alambda, opts):
             return calc_f(X) + alambda*norm1(X)
 
     DtD = np.dot(D.T, D)
-    # DtD = mydot(D.T, D)
     DtY = np.dot(D.T, Y)
-    # DtY = mydot(D.T, Y)
     def grad(X):
-        # t1 = time.time() 
-
-        g=  np.dot(DtD, X) - DtY 
-        # g = mydot(DtD, X) - DtY 
-        # t2 = time.time() 
-        # print t2 - t1 
+        g =  np.dot(DtD, X) - DtY 
         return g 
-    # print LA.eig(DtD)
-    # import pdb; pdb.set_trace()  # breakpoint 084b346f //
-    # print type(DtD)
-    # print type(LA.eig(DtD)[0])
-    # print np.max(LA.eig(DtD)[0])
-    # print LA.eig(DtD)[0]
     L = np.max(LA.eig(DtD)[0])
     (X, it) = fista(grad, Xinit, L, alambda, opts, calc_F)
     return (X, it)
@@ -522,11 +366,9 @@ def lasso_fista_test():
     k = 700 
     Y = normc(np.random.rand(d, N))
     D = normc(np.random.rand(d, k))
-    # opts = {tol : 0.00001, max_iter: 30}
     opts = Opts(test_mode = False, max_iter=50, show_cost = False)
     alambda = 0.01 
     lasso_fista(Y, D, np.array([]), alambda, opts)
-    # pass 
 
 class Opts:
     """
@@ -904,11 +746,6 @@ def range_reduce_test():
     range_reduce(D_range, bad_ids)
     print D_range 
 
-def zeros(rows, cols):
-    return np.zeros((rows, cols))
-
-def ones(rows, cols):
-    return np.ones((rows, cols))
 # range_reduce_test()
 def build_mean_vector(X, Y_range):
     """
@@ -927,9 +764,6 @@ def train_test_split(dataset, N_train):
     if dataset == 'myARgender':
         fn = os.path.join('data', 'myARgender.pickle')
         Vars = myload(fn)
-        print Vars.keys()
-        # import pdb; pdb.set_trace()  # breakpoint 73631224 //
-
         Y_train     = Vars['Y_train']
         Y_test      = Vars['Y_test']
         label_train = vec(Vars['label_train']).astype(int)
@@ -990,142 +824,6 @@ def SRC_top(dataset, N_train, lambda1):
     acc = float(sum(pred == label_test))/label_test.size 
     return acc 
 
-#################### ODL ###########################
-def ODL_cost(Y, D, X, alambda):
-
-    return 0.5*normF2(Y - np.dot(D, X)) + alambda*norm1(X)
-
-def ODL_updateD(D, E, F, opts):
-    """
-    * Syntax `[D, it] = ODL_updateD(D, E, F, opts)`
-    * The main algorithm in ODL. 
-    * Solving the optimization problem:
-      `D = arg min_D -2trace(E'*D) + trace(D*F*D')` 
-        subject to: `||d_i||_2 <= 1`,
-        where `F` is a positive semidefinite matrix. 
-      - INPUT: 
-        + `D, E, F` as in the above problem.
-        + `opts`. options:
-          * `opts.max_iter`: maximum number of iterations.
-          * `opts.tol`: when the difference between `D` in two successive 
-            iterations less than this value, the algorithm will stop.
-      - OUTPUT:
-        + `D`: solution.
-        + `it`: number of run iterations.
-    -----------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 04/07/2016
-            (http://www.personal.psu.edu/thv102/)
-    -----------------------------------------------
-    """ 
-    Dold = D 
-    it = 0 
-    sizeD = D.size 
-    while it < opts.max_iter:
-        it += 1
-        for i in xrange(D.shape[1]):
-            if F[i,i] != 0:
-                a = 1./F[i,i] * (E[:, i] - np.dot(D, F[:, i])) + D[:, i]
-                D[:, i] = a/ max(LA.norm(a), 1)
-        if LA.norm(D - Dold, 'fro')/sizeD < opts.tol:
-            break
-        Dold = D 
-    return (D, it)
-    # pass 
-
-def ODL(Y, k, alambda, opts):
-    """
-    * An implementation of the well-known Online Dictionary Learning method 
-    * Syntax: (D, X) = ODL(Y, k, opts)
-    * Solving the dictionary learning problem:
-       `[D, X] = arg min_{D, X} 0.5||Y - DX||_F^2 + lambda||X||_1` 
-        subject to `||d_i||_2 <= 1`.
-    ----------------------------
-    * Ref:
-    Mairal, Julien, et al. "Online learning for matrix factorization and 
-    sparse coding." _The Journal of Machine Learning Research 11_ (2010): 
-    [[paper]](http://www.di.ens.fr/~fbach/mairal10a.pdf)
-    ---------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 04/20/2016
-            http://www.personal.psu.edu/thv102/
-    ---------------------------------------------
-    """ 
-    if opts.show_cost:
-        print 'Start ODL...'
-    D = pickDfromY(Y, np.array([0, Y.shape[1]]), np.array([0, k]))
-
-    X = np.zeros((D.shape[1], Y.shape[1]))
-    if opts.show_cost:
-        print 'cost init = ', ODL_cost(Y, D, X, alambda)
-    ## 
-    optsD = opts 
-    optsD.max_iter = 200 
-    optsX = opts 
-    optsX.max_iter = 300
-    it = 0 
-    cost_old = float("inf")
-    while it < opts.max_iter:
-        it += 1 
-        ## Sparse coding step 
-        X,_ = lasso_fista(Y, D, X, alambda, optsX)
-        if opts.show_cost:
-            cost_new = ODL_cost(Y, D, X, alambda)
-            if cost_new < cost_old:
-                stt = 'YES'
-            else:
-                stt = 'NO, cost increases!!!'
-            print 'iter = %3d' %it, '| costX = %4.4f |' % cost_new, \
-                'cost decreases?', stt 
-            cost_old = cost_new 
-        ## Dictionary update step 
-        E = np.dot(Y, X.T)
-        F = np.dot(X, X.T)
-        D,_ = ODL_updateD(D, E, F, optsD)
-        if opts.show_cost:
-            cost_new = ODL_cost(Y, D, X, alambda)
-            if cost_new < cost_old:
-                stt = 'YES'
-            else:
-                stt = 'NO, cost increases!!!'
-            print 'iter = %3d' %it, '| costD = %4.4f |' % cost_new, \
-                'cost decreases?', stt  
-            cost_old = cost_new
-    return (D, X)   
-
-def ODL_test():
-    d = 10 
-    N = 100 
-    k = 50 
-    alambda = 0.1 
-    Y = normc(np.random.rand(d, N))
-    opts = Opts(max_iter = 100, show_cost = True)
-    ODL(Y, k, alambda, opts)
-
-
-
-#################### FDDL ##########################
-def FDDL_fidelity(Y, Y_range, D, D_range, X):
-    """
-    * Syntax: cost = FDDL_fidelity(Y, Y_range, D, D_range, X)
-    * Calculating the fidelity term in FDDL[[4]](#fn_fdd):
-    * $\sum_{c=1}^C \Big(\|Y_c - D_cX^c_c\|_F^2 + 
-        \sum_{i \neq c} \|D_c X^c_i\|_F^2\Big)$
-    """
-    cost = 0 
-    C = Y_range.size - 1 
-    for c in xrange(C):
-        Yc   = get_block_col(Y, c, Y_range)
-        Dc   = get_block_col(D, c, D_range)
-        Xc   = get_block_row(X, c, D_range)
-        Xcc  = get_block_col(Xc, c, Y_range)
-        cost += normF2(Yc - np.dot(Dc, Xcc))
-        for i in xrange(C):
-            if i == c:
-                continue 
-            Xci = get_block_col(Xc, i, Y_range)
-            cost += normF2(np.dot(Dc, Xci))
-    return cost 
-
-    # pass 
 def build_mean_matrix(X, cols = None):
     m = np.mean(X, axis = 1)
     if cols == None: 
@@ -1142,52 +840,8 @@ def build_mean_matrix_test():
 
 # build_mean_matrix_test()
 
-def FDDL_discriminative(X, Y_range):
-    """
-    * Syntax: cost = FDDL_discriminative(X, Y_range)
-    * calculating the discriminative term in FDDL[[4]](#fn_fdd):
-    * $\|X\|_F^2 + \sum_{c=1}^C (\|Xc - Mc\|_F^2 - \|Mc - M\|_F^2) $
-    """
-    cost = normF2(X) 
-    C = Y_range.size - 1 
-    m = np.mean(X, axis = 1)
-    for c in xrange(C):
-        Xc   = get_block_col(X, c, Y_range)
-        Mc   = build_mean_matrix(Xc)
-        cost += normF2(Xc - Mc)
-        M    = repmat(m, 1, Xc.shape[1])
-        # import pdb; pdb.set_trace()  # breakpoint d8aa75a6 //
-        cost -= normF2(Mc - M)
-    return cost 
-
-def FDDL_cost(Y, Y_range, D, D_range, X, opts):
-    cost = 0.5*normF2(Y - np.dot(D, X)) + opts.lambda1*norm1(X) + \
-           0.5*FDDL_fidelity(Y, Y_range, D, D_range, X) + \
-           0.5*opts.lambda2*FDDL_discriminative(X, Y_range)
-    return cost 
-
-def FDDL_updateX(Y, Y_range, D, D_range, X, opts):
-    pass 
-
-def FDDL_updateD(Y, Y_range, D, D_range, X, opts):
-    pass 
-
-def FDDL_updateD_fast(Y, Y_range, D, D_range, X, opts):
-    """
-    ---------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 04/22/2016
-            http://www.personal.psu.edu/thv102/
-    ---------------------------------------------
-    """ 
-    F = buildMhat(np.dot(X, X.T), D_range, D_range)
-    E = np.dot(Y, buildMhat(X.T, Y_range, D_range))
-    # print 'diff E, E3', LA.norm(E - E3)
-    optsD = Opts(max_iter = 200, tol = 1e-8)
-    return ODL_updateD(D, E, F, optsD)
 
 
-def FDDL_pred(Y, Y_label, D, D_range, M, opts):
-    pass 
 
 #################### DLSI ##########################
 def DLSI_term(D, D_range):
@@ -1281,26 +935,6 @@ def DLSI_top(dataset, n_c, k, alambda, eta):
 
 #################### DLCOPAR #######################
 
-#################### LRSDL #########################
-def LRSDL_cost(Y, Y_range, D, D_range, D0, X, X0, opts):
-    """
-    Syntax: cost = LRSDL_cost(Y, Y_range, D, D_range, D0, X, X0, opts)
-    Calculate cost of LRSDL, include 5 terms:
-        + ||Y - D0X0 - DX||_F^2 
-        + FDDL_fidelity with Ybar = Y - D0X0 
-        + FDDL_discriminative
-        + ||X0 - M0||_F^2 
-        + ||D0||_*
-        + ||X||_1 + ||X0||-1
-    """ 
-    Ybar = Y - np.dot(D0, X0) 
-    cost = 0.5*normF2(Ybar - np.dot(D, X)) + \
-           0.5*FDDL_fidelity(Ybar, Y_range, D, D_range, X) + \
-           opts.lambda1*norm1(X) + opts.lambda1*norm1(X0) + \
-           0.5*opts.lambda2*(FDDL_discriminative(X, Y_range) + \
-                normF2(X0 - build_mean_matrix(X0))) + \
-           opts.lambda3*nuclearnorm(D0)
-    return cost 
 
 def buildMhat(M, range_row, range_col):
     """
@@ -1345,19 +979,48 @@ def buildM_2Mbar(X, Y_range, lambda2):
     for c in xrange(C):
         Xc = get_block_col(X, c, Y_range)
         mc = np.mean(Xc, axis = 1) 
-        MM[:, Y_range[c]: Y_range[c+1]] = repmat(lambda2*(m - 2*mc), \
-                                        1, Y_range[c+1] - Y_range[c])
+        MM[:, Y_range[c]: Y_range[c+1]] = \
+            repmat(lambda2*(m - 2*mc), 1, Y_range[c+1] - Y_range[c])
     return MM 
 
 def buildMean(X):
-    # N = X.shape[1]
-    # m = np.mean(X, axis = 1) 
-    # M = np.tile(m, (1, N))
     return build_mean_matrix(X)
 
+def calc_acc(pred, ground_truth):
+    acc = np.sum(pred == ground_truth)/ float(numel(ground_truth))
+    return acc
 
+def range_delete_ids(a_range, ids):
+    """
+    % function new_range = range_delete_ids(a_range, ids)
+    % given a range `a_range` of an array. Suppose we want to delete some
+    % element of that array indexed by `ids`, `new_range` is the new range
+    """
+    ids = np.sort(ids)
+    n = numel(a_range)
+    m = numel(ids)
+    a = np.zeros_like(a_range)
+    j = 1 
+    while j < n-1:
+        for i in xrange(n):
+            while a_range[j] < ids[i]:
+                j += 1
+            for k in range(j, n):
+                a[k] += 1
 
+    new_range = a_range - a
+    return new_range
 
+def range_delete_ids_test():
+    a_range = np.array([0, 3, 5, 10])
+    ids = np.array([1, 4, 7, 10])
+    print a_range
+    print range_delete_ids(a_range, ids)
+
+# range_delete_ids_test()
+
+def max_eig(D):
+    return np.max(LA.eig(D)[0])
 # test = False
 # if test:
     # label_to_range_test()
