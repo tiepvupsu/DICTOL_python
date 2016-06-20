@@ -18,14 +18,6 @@ def DLSI_term(D, D_range):
     """
     cost =  DLSI_term(D, D_range):
     """ 
-    # cost = 0 
-    # C = D_range.size - 1 
-    # for c in range(C):
-    #     ranged = np.arange(D_range[c], D_range[c+1])
-    #     rangecomd = np.setdiff1d(np.arange(D_range[-1]), ranged)
-    #     Dc = D[:, ranged]
-    #     D_comc = D[:, range_comd]
-    #     cost += normF2(np.dot(D_comc.T, Dc))
     A = erase_diagonal_blocks(np.dot(D.T, D), D_range, D_range)
     cost = normF2(A)
     return cost     
@@ -42,10 +34,10 @@ def DLSI_cost(Y, Y_range, D, D_range, X, opts):
     C = Y_range.size - 1 
     cost = 0
     for c in xrange(C):
-        Yc = get_block_col(Y, c, Y_range)
-        Xc = X[c]
-        Dc = get_block_col(D, c, D_range)
-        cost += .5*normF2(Yc - np.dot(Dc, Xc)) + opts.lambda1*norm1(Xc)
+        Yc     = get_block_col(Y, c, Y_range)
+        Xc     = X[c]
+        Dc     = get_block_col(D, c, D_range)
+        cost  += .5*normF2(Yc - np.dot(Dc, Xc)) + opts.lambda1*norm1(Xc)
 
     cost += 0.5*opts.eta *DLSI_term(D, D_range)
     return cost 
@@ -80,14 +72,14 @@ def DLSI_updateD(D, E, F, A, lambda1, opts):
         cost = -2*np.trace(np.dot(E, D.T)) + np.trace(np.dot(F, np.dot(D.T, D))) +\
             lambda1*normF2(np.dot(A, D))
         return cost 
-    it = 0 
-    rho = 1.0
+    it    = 0
+    rho   = 1.0
     Z_old = D.copy()
-    U = np.zeros_like(D)
-    I_k = eye(D.shape[1])
-    X = 2*lambda1/rho*A.T 
-    Y = A.copy() 
-    B1 = np.dot(X, inv_IpXY(Y, X))
+    U     = np.zeros_like(D)
+    I_k   = eye(D.shape[1])
+    X     = 2*lambda1/rho*A.T
+    Y     = A.copy()
+    B1    = np.dot(X, inv_IpXY(Y, X))
 
     # B1 = np.dot(X, LA.inv(eye(Y.shape[0]) + np.dot(Y, X)))
     tol = 1e-8
@@ -96,17 +88,17 @@ def DLSI_updateD(D, E, F, A, lambda1, opts):
     while it < opts.max_iter:
         it += 1 
         # update D 
-        W = Z_old - U 
+        W  = Z_old - U 
         E2 = E + rho/2*W 
         F2 = F + rho/2*I_k 
         # D_old = D.copy() 
-        D = ODL_updateD(D, E2, F2, optsD)[0]
+        D  = ODL_updateD(D, E2, F2, optsD)[0]
         # print normF2(D - D_old)
         # update Z 
-        V = D + U 
+        V     = D + U
         Z_new = rho*(V - np.dot(B1, np.dot(Y, V)))
-        e1 = normF2(D - Z_new)
-        e2 = rho*normF2(Z_new - Z_old)
+        e1    = normF2(D - Z_new)
+        e2    = rho*normF2(Z_new - Z_old)
         if e1 < tol and e2 < tol:
             break 
         if opts.verbal:
@@ -114,24 +106,24 @@ def DLSI_updateD(D, E, F, A, lambda1, opts):
             print 'iter = %3d | costD = %5.4f | normF2(D - Z) = %5.4f | rho(Z_new - Z_old = %5.4f' \
                 %(it, cost, e1, e2)
         # update U 
-        U = U + D - Z_new 
+        U     = U + D - Z_new
         Z_old = Z_new.copy()
 
     return D 
 
 def DLSI_updateD_test():
-    d = 300
-    N = 10
-    k = 5
-    k2 = 495
-    Y = normc(np.random.rand(d, N))
-    D = normc(np.random.rand(d, k))
-    X = 1 * np.random.rand(k, N)
-    E = np.dot(Y, X.T)
-    F = np.dot(X, X.T)
-    A = normc(np.random.rand(k2, d))
-    lambda1 = 0.01;       
-    opts = Opts_DLSI(max_iter = 300, verbal = True, lambda1 = 0.01)
+    d       = 300
+    N       = 10
+    k       = 5
+    k2      = 495
+    Y       = normc(np.random.rand(d, N))
+    D       = normc(np.random.rand(d, k))
+    X       = 1 * np.random.rand(k, N)
+    E       = np.dot(Y, X.T)
+    F       = np.dot(X, X.T)
+    A       = normc(np.random.rand(k2, d))
+    lambda1 = 0.01;
+    opts    = Opts_DLSI(max_iter           = 300, verbal = True, lambda1 = 0.01)
     DLSI_updateD(D, E, F, A, lambda1, opts)
 
 # DLSI_updateD_test()
@@ -206,8 +198,8 @@ def DLSI(Y, Y_range, opts):
         it += 1 
         # update X 
         for c in xrange(C):
-            Yc = get_block_col(Y, c, Y_range)
-            Dc = get_block_col(D, c, D_range)
+            Yc   = get_block_col(Y, c, Y_range)
+            Dc   = get_block_col(D, c, D_range)
             X[c] = lasso_fista(Yc, Dc, X[c], opts.lambda1, optsX)[0]
         if opts.verbal:
             costX = DLSI_cost(Y, Y_range, D, D_range, X, opts)
@@ -219,9 +211,9 @@ def DLSI(Y, Y_range, opts):
             D_comc = np.delete(D, range(D_range[c], D_range[c+1]), axis = 1)
             Dc = get_block_col(D, c, D_range)
             Yc = get_block_col(Y, c, Y_range)
-            E = np.dot(Yc, X[c].T)
-            F = np.dot(X[c], X[c].T)
-            A = D_comc.T 
+            E  = np.dot(Yc, X[c].T)
+            F  = np.dot(X[c], X[c].T)
+            A  = D_comc.T
             D[:, D_range[c]: D_range[c+1]] = DLSI_updateD(Dc, E, F, A, eta, optsD)
         t2 = time.time()
         if opts.verbal:
@@ -261,7 +253,6 @@ def DLSI_pred(Y, D, opts):
     optsX = Opts(max_iter = 300)
     for c in xrange(C):
         Dc = get_block_col(D, c, D_range)
-
         Xc = lasso_fista(Y, Dc, zeros(Dc.shape[1], Y.shape[1]), opts.lambda1, optsX)[0]
         R1 = Y - np.dot(Dc, Xc)
         E[c,:] = 0.5*(R1*R1).sum(axis = 0) + opts.lambda1*abs(Xc).sum(axis = 0)
@@ -297,11 +288,11 @@ def DLSI_top(dataset, n_c, k, alambda, eta):
     ## Prepare parameters
     C = np.unique(label_train).size 
     D_range     = k*np.arange(C+1)
-    opts = Opts_DLSI(max_iter = 100, \
-                lambda1  = alambda, \
-                D_range = D_range,\
-                verbal = True,\
-                eta  = eta)
+    opts = Opts_DLSI(  max_iter = 100, \
+                        lambda1 = alambda, \
+                        D_range = D_range,\
+                        verbal  = True,\
+                        eta     = eta)
     Y_range     = label_to_range(label_train)
     ## Train 
     print "Training ...",
@@ -313,9 +304,6 @@ def DLSI_top(dataset, n_c, k, alambda, eta):
     acc = calc_acc(pred, label_test)
     print acc 
     print "...done test"
-    ## save results
-    # A = {'acc': acc}
-    # cPickle.dump(A, output_file)
-    # close(output_file)
 
-# DLSI_top('myYaleB', 15, 10, 0.001, .01)
+def DLSI_top_test():
+    DLSI_top('myYaleB', 15, 10, 0.001, .01)
