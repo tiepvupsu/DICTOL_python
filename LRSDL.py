@@ -5,8 +5,8 @@ from my_opti import *
 from matlab_syntax import *
 class Opts_LRSDL:
     def __init__(self, verbal = False, max_iter = 100, tol = 1e-8, k = 0, \
-        k0 = 0, D_range_ext = np.array([0]), lambda1 = 0.001, lambda2 = 0.01,\
-        eta = 0.1, check_grad = False):
+        k0 = 0, D_range_ext = np.array([0]), lambda1, lambda2,\
+        eta, check_grad = False):
         self.verbal      = verbal
         self.max_iter    = max_iter
         self.tol         = tol

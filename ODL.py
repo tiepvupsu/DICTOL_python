@@ -28,18 +28,26 @@ def ODL_updateD(D, E, F, opts):
 	        (http://www.personal.psu.edu/thv102/)
 	-----------------------------------------------
 	"""
+	def calc_cost(D):
+		return -2*np.trace(np.dot(E, D.T)) + np.trace(np.dot(np.dot(F, D.T), D))
+
 	D_old = D.copy() 
 	it = 0 
 	sizeD = numel(D)
+	# print opts.tol
 	while it < opts.max_iter:
 		it = it + 1 
 		for i in xrange(D.shape[1]):
 			if F[i,i] != 0:
 				a = 1.0/F[i,i] * (E[:, i] - D.dot(F[:, i])) + D[:, i]
 				D[:,i] = a/max(LA.norm(a, 2), 1)
+		if opts.verbal:
+			print 'iter = %3d | cost = %.4f | tol = %f' %(it, calc_cost(D), \
+				LA.norm(D - D_old, 'fro')/sizeD )
+
 		if LA.norm(D - D_old, 'fro')/sizeD < opts.tol:
 			break 
-		D_old = D 
+		D_old = D.copy()
 	return (D, it) 
 
 def ODL(Y, k, lambda1, opts, method = 'fista'):

@@ -78,7 +78,7 @@ def get_block_col(M, c, col_range):
     `get_block_col(M, 1, col_range)` will output the first block of `M`, 
     i.e. `M(:, 1:10)`.
     """
-    return M[:, col_range[c]: col_range[c+1]].copy()
+    return M[:, col_range[c]: col_range[c+1]]
     # pass 
 
 def get_block_col_test():
@@ -844,93 +844,7 @@ def build_mean_matrix_test():
 
 
 #################### DLSI ##########################
-def DLSI_term(D, D_range):
-    """
-    cost =  DLSI_term(D, D_range):
-    """ 
-    cost = 0 
-    C = D_range.size - 1 
-    for c in range(C):
-        ranged = np.arange(D_range[c], D_range[c+1])
-        rangecomd = np.setdiff1d(np.arange(D_range[-1]), ranged)
-        Dc = D[:, ranged]
-        D_comc = D[:, range_comd]
-        cost += normF2(np.dot(D_comc.T, Dc))
-    return cost     
 
-def DLSI_cost(Y, Y_range, D, D_range, X, opts):
-    """
-    * cost = DLSI_cost(Y, Y_range, D, D_range, X, lambda1, eta)
-    * calculating DLSI cost function 
-    * INPUT:
-        - Y, D: np.array
-        - Y_range, D_range: np.array 1d 
-        - X: list of np arrays
-    """ 
-    C = Y_range.size - 1 
-    cost = 0.5*opts.eta *DLSI_term(D, D_range)
-    
-    for c in xrange(C):
-        Yc = get_block_col(Y, c, Y_range)
-        Xc = X[c]
-        Dc = get_block_col(D, c, Y_range)
-        cost += .5*normF2(Yc - np.dot(Dc, Xc)) + norm1(Xc)
-
-    return cost 
-    
-def DLSI_updateX(Y, Y_range, D, D_range, X, lambda1):
-    pass 
-
-def DLSI_updateD(Y, Y_range, D, D_range, X, eta):
-    pass 
-
-def DLSI_pred(Y, Y_label, D, D_range, lambda1, eta):
-    pass 
-
-def DLSI_top(dataset, n_c, k, alambda, eta):
-    """
-    DLSI_top(dataset, n_c, k, alambda, eta)
-    ---------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 04/19/2016
-            http://www.personal.psu.edu/thv102/
-    ---------------------------------------------
-    """
-    print "Apply DLSI on " + dataset + "with parameters:"
-    print "n_c: ", n_c, '\nk: ', k, '\nlambda: ',\
-            alambda, '\neta: ', eta
-    ## get data
-    print "\nPreparing training and test samples...",
-    dataset, Y_train, Y_test, label_train, label_test = \
-        train_test_split(dataset, n_c)
-    print "done"
-    ## output filename 
-    path = 'results/DLSI'
-    if not os.path.exists(path):
-        os.makedirs(path)
-    t = get_time_str()
-    fn = os.path.join('results', 'DLSI', dataset + '_N_'+ str(n_c) + \
-        '_k_' + str(k) + '_l_' + str(alambda) + '_e_' + str(eta) + '_' + t \
-        + '.pickle')
-    output_file = open(fn, 'w+')
-    ## Prepare parameters
-    C = np.unique(label_train).size 
-    opts = Opts(max_iter = 100, \
-                alambda  = alambda, \
-                eta  = eta)
-    D_range     = k*np.arange(C+1)
-    Y_range     = label_to_range(label_train)
-    ## Train 
-    print "Training ...",
-    D, X = DLSI(Y_train, Y_range, D_range, opts)
-    print "...done training"
-    ##
-    print "Test...",
-    acc = DLSI_pred(Y_test, D,  opts)
-    print "...done test"
-    ## save results
-    A = {'acc': acc}
-    cPickle.dump(A, output_file)
-    close(output_file)
 #################### DFDL ##########################
 
 #################### DLCOPAR #######################
@@ -1021,6 +935,66 @@ def range_delete_ids_test():
 
 def max_eig(D):
     return np.max(LA.eig(D)[0])
+
+def time_estimate(t):
+    h = math.floor(t/3600)
+    t -= 3600*h
+    m = math.floor(t/60)
+    t -= m*60
+    print '| time left: %2dh%2dm%2ds' %(h, m, t)
+
+def erase_diagonal(A):
+    if A.shape[0] != A.shape[1]:
+        print 'The input matrix is not square!'
+        return 
+    B = A.copy()
+    np.fill_diagonal(B, 0)
+    return B 
+
+def erase_diagonal_blocks(A, row_range, col_range):
+    if numel(row_range) != numel(col_range):
+        print 'no. of column blocks != no. of row blocks!!'
+    C = numel(row_range) - 1
+    B = A.copy()
+    for c in xrange(C):
+        B[row_range[c]: row_range[c+1], col_range[c]: col_range[c+1]] = 0
+    return B 
+
+def inv_IpXY(X, Y):
+    """
+    Calculate the inverse of matrix A = I + XY.
+    if X is a fat matrix (number of columns >> number of rows), then use inv(I + X*Y)
+    else: use equation: (I + XY)^(-1) = I - Y*(I + Y*X)^(-1)*X 
+    -----------------------------------------------
+    Author: Tiep Vu, thv102@psu.edu, 4/12/2016
+            (http://www.personal.psu.edu/thv102/)
+    -----------------------------------------------
+    """
+    d1 = X.shape[0]
+    d2 = X.shape[1]
+    if d1 > d2:
+        M = eye(d1) - np.dot(np.dot(X, LA.inv(eye(d2) + np.dot(Y, X))), Y)
+    else:
+        M = LA.inv(eye(d1) + np.dot(X, Y))
+    return M 
+def inv_IpXY_test():
+    d1 = 1000
+    d2 = 10
+    X = np.random.rand(d1, d2)
+    Y = np.random.rand(d2, d1)
+    t1 = time.time()
+    A = LA.inv(eye(d1)+ np.dot(X,Y))
+    t2 = time.time()
+    print 't1 = ', t2 - t1 
+    #
+    t1 = time.time()
+    B = inv_IpXY(X, Y)
+    t2 = time.time()
+    print 't2 = ', t2 - t1 
+    print 'diff = ', normF2(A - B)
+
+# inv_IpXY_test()
+
 # test = False
 # if test:
     # label_to_range_test()

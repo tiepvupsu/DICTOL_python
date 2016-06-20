@@ -10,6 +10,7 @@ def mat2pickle(filename):
          cPickle.dump(A, output_file)
 
 filename = os.path.join('data', 'myARgender.mat')
+filename = os.path.join('data', 'tmp.mat')
 mat2pickle(filename)
 
 # read 
