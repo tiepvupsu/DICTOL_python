@@ -303,6 +303,8 @@ def COPAR_test():
     # COPAR(Y, Y_range, opts)
     COPAR_updateX(Y, Y_range, D, X, opts)
 
+
+
 # COPAR_test()
 
 
@@ -376,7 +378,7 @@ def COPAR_top(dataset, n_c, k, k0, alambda, eta):
     C = np.unique(label_train).size 
     D_range    = k*np.arange(C+1)
     D_range_ext = np.hstack((D_range, D_range[-1]+k0))
-    opts = Opts_COPAR(  max_iter = 100, \
+    opts = Opts_COPAR(  max_iter = 2, \
                         lambda1 = alambda, \
                         D_range_ext = D_range_ext,\
                         verbal  = True,\
@@ -393,14 +395,14 @@ def COPAR_top(dataset, n_c, k, k0, alambda, eta):
         print 'gamma = %.4f' % gamma,
         pred = COPAR_pred_GC(Y_test, D, gamma, opts)
         acc = calc_acc(pred, label_test)
-        print '| acc = %2.2f (percent)' % (100 * acc)
+        print '| acc = %2.2f%%' % (100 * acc)
 
     print "LC: "
     for gamma in [0.0001, 0.001, 0.005, 0.01]:
         print 'gamma = %.4f' % gamma,
         pred = COPAR_pred_LC(Y_test, D, gamma, opts)
         acc = calc_acc(pred, label_test)
-        print '| acc = %2.2f (percent)' % (100 * acc)
+        print '| acc = %2.2f%%' % (100 * acc)
 
 
     print "...done test"
@@ -409,7 +411,7 @@ def COPAR_top_test():
     COPAR_top('myYaleB', 3, 2, 2, 0.001, 0.01)
     # COPAR_top('myARgender', 10, 8, 5, 0.001, 0.01)
 
-COPAR_top_test()
+# COPAR_top_test()
 
 def COPAR_updateD_test():
     fn = os.path.join('data', 'tmp2.pickle')
@@ -437,7 +439,54 @@ def COPAR_updateD_test():
     COPAR_updateD(Y, Y_range, D, X, opts) 
 
 # COPAR_updateD_test()
+def COPAR_test():
+    fn = os.path.join('data', 'tmp3.pickle')
+    Vars = myload(fn)
 
+    # print Vars.keys()
+
+    Y = Vars['Y']
+    Y_range = Vars['Y_range'][0]
+    C = 10 
+    N = 7 
+    d = 30 
+    k = 7
+    k0 = 10 
+    D_range     = k*np.arange(C+1)
+    D_range_ext = np.hstack((D_range, D_range[-1]+k0))
+
+    opts = Opts_COPAR(lambda1 = 0.0001, eta = 0.01, max_iter = 10, \
+        verbal = True, D_range_ext = D_range_ext)
+
+    COPAR(Y, Y_range, opts)
+
+# COPAR_test()
+def COPAR_updateX_test():
+    fn = os.path.join('data', 'tmp5.pickle')
+    Vars = myload(fn)
+
+    # print Vars.keys()
+
+    Y = Vars['Y']
+    Y_range = Vars['Y_range'][0]
+    X = Vars['X']
+    D = Vars['D']
+
+    d  = 30
+    N  = 7
+    k  = 7
+    k0 = 10
+    C  = 20
+
+    D_range     = k*np.arange(C+1)
+    D_range_ext = np.hstack((D_range, D_range[-1]+k0))
+
+    opts = Opts_COPAR(lambda1 = 0.0001, eta = 0.01, max_iter = 10, \
+        verbal = True, D_range_ext = D_range_ext)
+
+    COPAR_updateX(Y, Y_range, D, X, opts)
+
+# COPAR_updateX_test()
 
 def COPAR_updateXc_test():
     fn = os.path.join('data', 'tmp.pickle')
@@ -480,3 +529,4 @@ def COPAR_updateXc_test():
 
     Xc = COPAR_updateXc(DtD, DCp1tDCp1, DtY,  Y_range, Xc, c, L, opts)
 
+COPAR_top('myYaleB', 10, 8, 5, 0.001, 0.01)

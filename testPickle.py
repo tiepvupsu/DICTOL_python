@@ -10,7 +10,7 @@ def mat2pickle(filename):
          cPickle.dump(A, output_file)
 
 # filename = os.path.join('data', 'myYaleB.mat')
-filename = os.path.join('data', 'tmp2.mat')
+filename = os.path.join('data', 'tmp5.mat')
 mat2pickle(filename)
 
 # read 
