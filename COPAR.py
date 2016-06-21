@@ -221,9 +221,10 @@ def COPAR_updateD(Y, Y_range, D, X, opts):
         E = np.dot(Ychat + Ycbar, Xcc.T)
         F = 2*np.dot(Xcc, Xcc.T)
         A = D.copy()
-        np.delete(A, Dc_range, axis = 1)
+        A = np.delete(A, Dc_range, axis = 1)
         D[:, Dc_range] = DLSI_updateD(Dc, E, F, A.T, opts.eta, optsD)
         Yhat[:, Yc_range] = Yc - np.dot(D[:, Dc_range], Xcc)
+        # print COPAR_cost(Y, Y_range, D, opts.D_range_ext, X, opts)
     ## DCp1 
     XCp1 = get_block_row(X, C, D_range_ext)
     Ybar = Y - np.dot(D[:, : D_range_ext[-2]], X[: D_range_ext[-2], :])
@@ -410,43 +411,72 @@ def COPAR_top_test():
 
 COPAR_top_test()
 
+def COPAR_updateD_test():
+    fn = os.path.join('data', 'tmp2.pickle')
+    Vars = myload(fn)
 
-# fn = os.path.join('data', 'tmp.pickle')
-# Vars = myload(fn)
+    # print Vars.keys()
 
-# # print Vars.keys()
+    D = Vars['D']
+    Y = Vars['Y']
+    X = Vars['X']
+    Y_range = Vars['Y_range'][0]
 
-# D = Vars['D']
-# Y = Vars['Y']
-# Xc = Vars['Xc']
-# # D_range_ext = Vars['D_range_ext']
+    print Y_range[0]
 
-# lambda1 = 0.01
-# # DLSI_updateD(D, E, F, A, lambda1, opts)
-# C = 3 
-# N = 10
-# d = 30
-# k = 10
-# k0 = 10
-# c = 1
 
-# Y_range = np.array([0, 10, 20, 30])
-# D_range_ext = np.array([0, 10, 20, 30, 40])
-# DtD = np.dot(D.T, D)
-# DtY = np.dot(D.T, Y)
-# Yc = get_block_col(Y, c, Y_range)
-# D_range = D_range_ext[: -1]
+    C = 10
+    N = 7
+    d = 300 
+    k = 7 
+    k0 = 10
+    D_range = np.arange(C+1)*k 
+    D_range_ext = np.hstack((D_range, D_range[-1] + k0))
+    opts = Opts_COPAR(max_iter = 100, verbal = True, lambda1 = 0.01, eta = 0.1, \
+        D_range_ext = D_range_ext)
+    COPAR_updateD(Y, Y_range, D, X, opts) 
 
-# opts = Opts_COPAR(max_iter = 300, verbal = True, tol = 1e-8, check_grad = True,\
-#     D_range_ext = D_range_ext, lambda1 = 0.01, eta = 0.1)
+# COPAR_updateD_test()
 
-# DCp1 = get_block_col(D, C, D_range_ext)
-# DCp1tDCp1 = np.dot(DCp1.T, DCp1)
 
-# k0 = D_range_ext[-1] - D_range_ext[-2]
-# if k0 > 0: 
-#     L = max_eig(DtD) + max_eig(DCp1tDCp1)
-# else:
-#     L = max_eig(DtD)
+def COPAR_updateXc_test():
+    fn = os.path.join('data', 'tmp.pickle')
+    Vars = myload(fn)
 
-# Xc = COPAR_updateXc(DtD, DCp1tDCp1, DtY,  Y_range, Xc, c, L, opts)
+    # print Vars.keys()
+
+    D = Vars['D']
+    Y = Vars['Y']
+    Xc = Vars['Xc']
+    # D_range_ext = Vars['D_range_ext']
+
+    lambda1 = 0.01
+    # DLSI_updateD(D, E, F, A, lambda1, opts)
+    C = 3 
+    N = 10
+    d = 30
+    k = 10
+    k0 = 10
+    c = 1
+
+    Y_range = np.array([0, 10, 20, 30])
+    D_range_ext = np.array([0, 10, 20, 30, 40])
+    DtD = np.dot(D.T, D)
+    DtY = np.dot(D.T, Y)
+    Yc = get_block_col(Y, c, Y_range)
+    D_range = D_range_ext[: -1]
+
+    opts = Opts_COPAR(max_iter = 300, verbal = True, tol = 1e-8, check_grad = False,\
+        D_range_ext = D_range_ext, lambda1 = 0.01, eta = 0.1)
+
+    DCp1 = get_block_col(D, C, D_range_ext)
+    DCp1tDCp1 = np.dot(DCp1.T, DCp1)
+
+    k0 = D_range_ext[-1] - D_range_ext[-2]
+    if k0 > 0: 
+        L = max_eig(DtD) + max_eig(DCp1tDCp1)
+    else:
+        L = max_eig(DtD)
+
+    Xc = COPAR_updateXc(DtD, DCp1tDCp1, DtY,  Y_range, Xc, c, L, opts)
+
