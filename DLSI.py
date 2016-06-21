@@ -194,6 +194,7 @@ def DLSI(Y, Y_range, opts):
                         eta = opts.eta,\
                         verbal = False)
     t1 = time.time()
+    ## MAIN algorithm
     while it < opts.max_iter:
         it += 1 
         # update X 

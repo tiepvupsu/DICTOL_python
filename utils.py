@@ -11,7 +11,7 @@ import os
 import io 
 import scipy.io as sio
 import pickle
-from ODL import *
+# from ODL import *
 test = True 
 # test = False 
 
@@ -67,19 +67,27 @@ def range_to_label_test():
     print "range: ", arange 
     print "label: ", range_to_label(arange) 
 
-def get_block_col(M, c, col_range):
+def get_block_col(M, C, col_range):
     """
     * Syntax: `Mc = get_block_col(M, c, col_range)`
     * Extract a block of columns from a matrix.
         - `M`: the big matrix `M = [M_1, M_2, ...., M_C]`.
-        - `c`: block index (start at 0).
+        - `C`: blocks indices (start at 0).
         - `col_range`: range of samples, see `Y_range` and `D_range` above.
     * Example: `M` has 25 columns and `col_range = [0, 10, 25]`, then 
     `get_block_col(M, 1, col_range)` will output the first block of `M`, 
     i.e. `M(:, 1:10)`.
     """
-    return M[:, col_range[c]: col_range[c+1]]
-    # pass 
+    if isinstance(C, int):
+        return M[:, col_range[C]: col_range[C+1]]
+    if isinstance(C, list) or isinstance(C, (np.ndarray, np.generic)):
+        ids = []
+        for c in C:
+            ids = ids + range(col_range[c], col_range[c+1])
+        return M[:, ids]
+
+
+
 
 def get_block_col_test():
     print "---------------------------------------\n`get_block_col test:"
@@ -87,21 +95,27 @@ def get_block_col_test():
     arange = np.array([0, 4, 7, 9], dtype = np.int)
     print " A: \n", A
     print " arange: ", arange  
-    print " get_block_col(A, 2, arange): \n", get_block_col(A, 2, arange)
+    print " get_block_col(A, [1, 2], arange): \n", get_block_col(A, [1, 2], arange)
 
-def get_block_row(M, c, row_range):
+def get_block_row(M, C, row_range):
     """
     * Extract a block of rows from a matrix.
     * Syntax: `Mc = get_block_row(M, c, row_range)`
         - `M`: the big matrix `M = [M_1; M_2; ....; M_C]`.
-        - `c`: block index (start at 0).
+        - `C`: an `int`, `list` of ints or an nparray of ints   
+            block indices (start at 0).
         - `row_range`: range of samples, see `Y_range` and `D_range` above.
     * Example: `M` has 40 rows and `row_range = [0, 10, 25, 40]`, then 
     `get_block_row(M, 2, row_range)` will output the second block of `M`, 
     i.e. `M(11:25, :)`.
     """
-    return M[row_range[c]: row_range[c+1], :].copy()
-    # pass 
+    if isinstance(C, int):
+        return M[row_range[C]: row_range[C+1], :].copy()
+    if isinstance(C, list) or isinstance(C, (np.ndarray, np.generic)):
+        ids = []
+        for c in C:
+            ids = ids + range(row_range[c], row_range[c+1])
+        return M[ids, :].copy()
 
 def get_block_row_test():
     print "---------------------------------------\n`get_block_row` test:"
@@ -109,7 +123,8 @@ def get_block_row_test():
     arange = np.array([0, 4, 7, 9], dtype = np.int)
     print " A: \n", A
     print " arange: ", arange  
-    print " get_block_row(A, 3, arange): \n", get_block_row(A, 3, arange)
+    print " get_block_row(A, [0, 2], arange): \n", get_block_row(A, np.array([0, 2]), arange)
+
 
 def get_block(M, i, j, row_range, col_range):
     """
@@ -287,36 +302,30 @@ def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F):
     """ 
     Linv = 1/L
     lambdaLiv = alambda/L
-    x_old = Xinit
-    y_old = Xinit
+    x_old = Xinit.copy()
+    y_old = Xinit.copy()
     t_old = 1 
     it = 0
     cost_old = float("inf") # the positive infinity number 
     while it < opts.max_iter:
         it += 1 
-        # t1 = time.time()
         x_new = np.real(shrinkage(y_old - Linv*fn_grad(y_old), lambdaLiv))
-        # print x_new 
-        # print type(x_new)
-        # t2 = time.time() 
-        # print t2 - t1
         t_new = 0.5*(1 + math.sqrt(1 + 4*t_old**2))
         y_new = x_new + (t_old - 1)/t_new * (x_new - x_old)
         e = norm1(x_new - x_old)/x_new.size 
         if e < opts.tol:
             break;
-        x_old = x_new 
-        t_old = t_new 
-        y_old = y_new 
+        x_old = x_new.copy()
+        t_old = t_new
+        y_old = y_new.copy()
         if opts.verbal:
             cost_new = fn_calc_F(x_new)
-            if cost_new <= cost_old:
-                stt = 'YES.'
-            else:
-                stt = 'No, check your code.'
-            print 'iter = '+str(it)+', cost = %4.4f' % cost_new, \
-                ', cost decreases? ',\
-                stt 
+            # if cost_new <= cost_old:
+            #     stt = 'YES.'
+            # else:
+            #     stt = 'No, check your code.'
+            print 'iter = '+str(it)+', cost = %4.4f' % cost_new #\
+                # ', cost decreases? ',     stt 
             cost_old = cost_new 
     return (x_new, it)
 
@@ -689,7 +698,6 @@ def pickTrainTest(dataset, N_train_c):
     data_fn = os.path.join('data', dataset + '.pickle')
     # data_fn = os.path.join('data', dataset + '.mat')
     Vars = myload(data_fn)
-    print Vars.keys()
     Y = Vars['Y']
     d = Y.shape[0]
     if 'Y_range' not in Vars:
