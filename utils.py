@@ -209,7 +209,8 @@ def nuclearnorm(X):
     * Return nuclear norm of a matrix.
     * Syntax `res = nuclearnorm(X)`
     """
-
+    if numel(X) == 0:
+        return 0
     return LA.norm(X) if is_vector(X) else LA.norm(X, 'nuc')
 
 
