@@ -349,7 +349,7 @@ def lasso_fista(Y, D, Xinit, alambda, opts):
       - _Can be used for solving a Weighted Lasso problem_.
     """
     # pass 
-    if Xinit.size == 0:
+    if numel(Xinit) == 0:
         Xinit = np.zeros((D.shape[1], Y.shape[1]))
 
     def calc_f(X):
@@ -679,7 +679,7 @@ def SRC_pred(Y, D, D_range, lambda1, opts):
     pred = np.zeros((1, Y.shape[1]))
 
     print "sparse coding...",
-    X,_ = lasso_fista(Y, D, None, lambda1, opts)
+    X,_ = lasso_fista(Y, D, np.array([]), lambda1, opts)
     print "done"
 
     E = np.zeros((C, Y.shape[1]))

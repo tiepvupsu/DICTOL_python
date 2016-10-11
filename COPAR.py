@@ -529,4 +529,4 @@ def COPAR_updateXc_test():
 
     Xc = COPAR_updateXc(DtD, DCp1tDCp1, DtY,  Y_range, Xc, c, L, opts)
 
-COPAR_top('myYaleB', 10, 8, 5, 0.001, 0.01)
+# COPAR_top('myYaleB', 10, 8, 5, 0.001, 0.01)

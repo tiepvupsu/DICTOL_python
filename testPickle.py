@@ -9,8 +9,8 @@ def mat2pickle(filename):
     with open(r""+pickle_fn, "wb") as output_file:
          cPickle.dump(A, output_file)
 
-# filename = os.path.join('data', 'myYaleB.mat')
-filename = os.path.join('data', 'tmp5.mat')
+filename = os.path.join('data', 'AR_EigenFace.mat')
+# filename = os.path.join('data', 'tmp5.mat')
 mat2pickle(filename)
 
 # read 
