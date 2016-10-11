@@ -5,3 +5,4 @@ from ODL import *
 from COPAR import *
 
 acc = SRC_top('myARreduce', 7, 0.001)
+print acc 

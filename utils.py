@@ -683,12 +683,11 @@ def SRC_pred(Y, D, D_range, lambda1, opts):
     print "done"
 
     E = np.zeros((C, Y.shape[1]))
+    
     for i in xrange(C):
-
         Xi = get_block_row(X, i, D_range)
         Di = get_block_col(D, i, D_range)
         R = Y - np.dot(Di, Xi)
-
         E[i,:] = (R*R).sum(axis = 0)
 
     pred = np.argmin(E, axis = 0) + 1
