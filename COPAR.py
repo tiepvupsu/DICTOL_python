@@ -6,9 +6,9 @@ from DLSI import *
 import time 
 
 class Opts_COPAR:
-    def __init__(self, lambda1 = 0, eta = 0,verbal = False, max_iter = 100, tol = 1e-8, \
+    def __init__(self, lambda1 = 0, eta = 0,verbose = False, max_iter = 100, tol = 1e-8, \
         D_range_ext = np.array([0]),  check_grad = False):
-        self.verbal      = verbal
+        self.verbose      = verbose
         self.max_iter    = max_iter
         self.tol         = tol
         self.D_range_ext = D_range_ext
@@ -61,10 +61,10 @@ def COPAR_init(Y, Y_range, opts):
     D           = zeros(Y.shape[0], D_range_ext[-1])
     X           = zeros(D_range_ext[-1], Y_range[-1])
 
-    if opts.verbal:
+    if opts.verbose:
         print 'Initiallizing class:...'
     for c in xrange(C):
-        if opts.verbal:
+        if opts.verbose:
             print '%3d' %(c + 1), 
             if (c+1) % 10 == 0:
                 print ''
@@ -156,7 +156,7 @@ def COPAR_updateXc(DtD, DCp1tDCp1, DtY,  Y_range, Xc, c, L, opts):
     else:
         L2 = L + 2 
 
-    opts_fista = Opts_COPAR(max_iter = 300, tol = 1e-8, verbal = False)
+    opts_fista = Opts_COPAR(max_iter = 300, tol = 1e-8, verbose = False)
     Xc = fista(grad, Xc, L2, lambda1, opts_fista, calc_F)[0]
     return Xc
 
@@ -182,7 +182,7 @@ def COPAR_updateX(Y, Y_range, D, X, opts):
     else:
         L = max_eig(DtD)
 
-    optsX = Opts_COPAR(verbal = False, max_iter = 100, lambda1 = opts.lambda1, \
+    optsX = Opts_COPAR(verbose = False, max_iter = 100, lambda1 = opts.lambda1, \
                         D_range_ext = opts.D_range_ext)
     ##
     for c in xrange(C):
@@ -190,7 +190,7 @@ def COPAR_updateX(Y, Y_range, D, X, opts):
 
         X[:, Y_range[c]: Y_range[c+1]] = COPAR_updateXc(DtD, DCp1tDCp1, DtY, \
             Y_range, Xc, c, L, optsX)
-        if opts.verbal:
+        if opts.verbose:
             costXc = COPAR_cost(Y, Y_range, D, D_range_ext, X, opts)
             print 'class = %3d | costXc = %.4f' %(c, costXc)
 
@@ -201,7 +201,7 @@ def COPAR_updateD(Y, Y_range, D, X, opts):
     C = numel(Y_range) - 1 
     D_range_ext = opts.D_range_ext 
     DCp1 = get_block_col(D, C, D_range_ext)
-    optsD = Opts_COPAR(max_iter = 100, verbal = False,\
+    optsD = Opts_COPAR(max_iter = 100, verbose = False,\
                         eta = opts.eta, D_range_ext = opts.D_range_ext)
     Yhat = np.zeros_like(Y)
     ## update Dc 
@@ -241,13 +241,13 @@ def COPAR(Y, Y_range, opts):
     D_range_ext = opts.D_range_ext
     D_range = D_range_ext[: -1]
     ## INIT 
-    opts_init = Opts_COPAR(max_iter = 30, verbal = False, lambda1 = opts.lambda1,\
+    opts_init = Opts_COPAR(max_iter = 30, verbose = False, lambda1 = opts.lambda1,\
                 eta = opts.eta, D_range_ext = opts.D_range_ext)
     D, X = COPAR_init(Y, Y_range, opts_init)
     ## opts for X and D 
-    optsX = Opts_COPAR(max_iter = 300, verbal = False, lambda1 = opts.lambda1, \
+    optsX = Opts_COPAR(max_iter = 300, verbose = False, lambda1 = opts.lambda1, \
                         D_range_ext = opts.D_range_ext)
-    optsD = Opts_COPAR(max_iter = 100, verbal = False, lambda1 = opts.lambda1, \
+    optsD = Opts_COPAR(max_iter = 100, verbose = False, lambda1 = opts.lambda1, \
                         eta = opts.eta, D_range_ext = opts.D_range_ext)
     it = 0 
     t1 = time.time()
@@ -255,21 +255,21 @@ def COPAR(Y, Y_range, opts):
     while it < opts.max_iter:
         it += 1
         ## update X 
-        if opts.verbal:
+        if opts.verbose:
             print 'iter = %3d/%3d | updating X ...' %(it, opts.max_iter),
         X = COPAR_updateX(Y, Y_range, D, X, optsX)
         t2 = time.time()
         if (t2 - t1) > 20*3600:
             break 
-        if opts.verbal:
+        if opts.verbose:
              costX = COPAR_cost(Y, Y_range, D, D_range_ext, X, opts)
              print 'costX = %5.3f' %costX 
         ## update D 
-        if opts.verbal:
+        if opts.verbose:
             print '                 updating D ...',
         D = COPAR_updateD(Y, Y_range, D, X, optsD); # and DCp1 
         t2 = time.time()
-        if opts.verbal:
+        if opts.verbose:
             costD = COPAR_cost(Y, Y_range, D, D_range_ext, X, opts)
             print 'costD = %5.3f' %costD,   
             t = (t2 - t1)*(opts.max_iter - it)/it 
@@ -294,7 +294,7 @@ def COPAR_test():
                 lambda1     = 0.01,\
                 eta         = 0.0001, \
                 D_range_ext = D_range_ext,\
-                verbal      = True,\
+                verbose      = True,\
                 check_grad  = False)
     Y_range = N*np.arange(C+1)
     Y = normc(np.random.rand(d, C*N))
@@ -311,7 +311,7 @@ def COPAR_test():
 def COPAR_pred_GC(Y, D, gamma, opts):
     D_range_ext = opts.D_range_ext
     C = numel(D_range_ext) - 2
-    optsX = Opts_COPAR(verbal = False, max_iter = 300)
+    optsX = Opts_COPAR(verbose = False, max_iter = 300)
 
     X = lasso_fista(Y, D, zeros(D.shape[1], Y.shape[1]), gamma, optsX)[0]
     DCp1_range = range(D_range_ext[-2], D_range_ext[-1])
@@ -330,7 +330,7 @@ def COPAR_pred_GC(Y, D, gamma, opts):
 
 def COPAR_pred_LC(Y, D, gamma, opts):
     D_range_ext = opts.D_range_ext
-    optsX = Opts_COPAR(verbal = False, max_iter = 300)
+    optsX = Opts_COPAR(verbose = False, max_iter = 300)
     DCp1_range = range(D_range_ext[-2], D_range_ext[-1])
     DCp1 = D[:, DCp1_range]
     C = numel(D_range_ext) - 2
@@ -381,7 +381,7 @@ def COPAR_top(dataset, n_c, k, k0, alambda, eta):
     opts = Opts_COPAR(  max_iter = 2, \
                         lambda1 = alambda, \
                         D_range_ext = D_range_ext,\
-                        verbal  = True,\
+                        verbose  = True,\
                         eta     = eta)
     Y_range     = label_to_range(label_train)
     ## Train 
@@ -434,7 +434,7 @@ def COPAR_updateD_test():
     k0 = 10
     D_range = np.arange(C+1)*k 
     D_range_ext = np.hstack((D_range, D_range[-1] + k0))
-    opts = Opts_COPAR(max_iter = 100, verbal = True, lambda1 = 0.01, eta = 0.1, \
+    opts = Opts_COPAR(max_iter = 100, verbose = True, lambda1 = 0.01, eta = 0.1, \
         D_range_ext = D_range_ext)
     COPAR_updateD(Y, Y_range, D, X, opts) 
 
@@ -456,7 +456,7 @@ def COPAR_test():
     D_range_ext = np.hstack((D_range, D_range[-1]+k0))
 
     opts = Opts_COPAR(lambda1 = 0.0001, eta = 0.01, max_iter = 10, \
-        verbal = True, D_range_ext = D_range_ext)
+        verbose = True, D_range_ext = D_range_ext)
 
     COPAR(Y, Y_range, opts)
 
@@ -482,7 +482,7 @@ def COPAR_updateX_test():
     D_range_ext = np.hstack((D_range, D_range[-1]+k0))
 
     opts = Opts_COPAR(lambda1 = 0.0001, eta = 0.01, max_iter = 10, \
-        verbal = True, D_range_ext = D_range_ext)
+        verbose = True, D_range_ext = D_range_ext)
 
     COPAR_updateX(Y, Y_range, D, X, opts)
 
@@ -515,7 +515,7 @@ def COPAR_updateXc_test():
     Yc = get_block_col(Y, c, Y_range)
     D_range = D_range_ext[: -1]
 
-    opts = Opts_COPAR(max_iter = 300, verbal = True, tol = 1e-8, check_grad = False,\
+    opts = Opts_COPAR(max_iter = 300, verbose = True, tol = 1e-8, check_grad = False,\
         D_range_ext = D_range_ext, lambda1 = 0.01, eta = 0.1)
 
     DCp1 = get_block_col(D, C, D_range_ext)

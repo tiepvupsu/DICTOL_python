@@ -41,7 +41,7 @@ def ODL_updateD(D, E, F, opts):
 			if F[i,i] != 0:
 				a = 1.0/F[i,i] * (E[:, i] - D.dot(F[:, i])) + D[:, i]
 				D[:,i] = a/max(LA.norm(a, 2), 1)
-		if opts.verbal:
+		if opts.verbose:
 			print 'iter = %3d | cost = %.4f | tol = %f' %(it, calc_cost(D), \
 				LA.norm(D - D_old, 'fro')/sizeD )
 
@@ -75,7 +75,7 @@ def ODL(Y, k, lambda1, opts, method = 'fista'):
 	D_range = np.array([0, k])
 	D = pickDfromY(Y, Y_range, D_range)
 	X = np.zeros((D.shape[1], Y.shape[1]))
-	if opts.verbal: 
+	if opts.verbose: 
 		print 'Initial cost: %5.4f' % ODL_cost(Y, D, X, lambda1)
 	it = 0 
 	optsX = Opts(max_iter = 300)
@@ -85,25 +85,25 @@ def ODL(Y, k, lambda1, opts, method = 'fista'):
 		# Sparse coding 
 		X = lasso_fista(Y, D, X, lambda1, optsX)[0]
 		# X = X0[0]
-		if opts.verbal: 
+		if opts.verbose: 
 			costX = ODL_cost(Y, D, X, lambda1)
 			print 'iter: %3d' % it, '| costX = %4.4f' % costX #'it: ', itx
 		# Dictionary update
 		F = np.dot(X, X.T)
 		E = np.dot(Y, X.T) 
 		D, itd = ODL_updateD(D, E, F, optsD)
-		if opts.verbal:
+		if opts.verbose:
 			costD = ODL_cost(Y, D, X, lambda1)
 			print '          | costD = %4.4f' % costD #'it: ', itd
 			if abs(costX - costD) < opts.tol:
 				break 
-	if opts.verbal:
+	if opts.verbose:
 		print 'Final cost: %4.4f' % ODL_cost(Y, D, X, lambda1)
 	return (D, X)		
 
 class Opts_ODL:
-	def __init__(self, verbal = False, max_iter = 100, tol = 1e-8):
-		self.verbal   = verbal
+	def __init__(self, verbose = False, max_iter = 100, tol = 1e-8):
+		self.verbose   = verbose
 		self.max_iter = max_iter
 		self.tol      = tol
 
@@ -115,7 +115,7 @@ def ODL_test():
 	Y      = normc(np.random.rand(d, N))
 	D      = normc(np.random.rand(d, k))
 	# Xinit  = np.zeros(D.shape[1], Y.shape[1])
-	opts = Opts_ODL(max_iter = 100, tol = 1e-8, verbal = True)
+	opts = Opts_ODL(max_iter = 100, tol = 1e-8, verbose = True)
 	ODL(Y, k, lambda1, opts)
 
 # ODL_test()

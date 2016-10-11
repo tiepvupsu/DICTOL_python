@@ -5,9 +5,9 @@ from math import *
 
 class Opts_DLSI:
     def __init__(self, lambda1 = 0.001, eta = 0.1, D_range= np.array([]), \
-        max_iter = 100, verbal = False, tol = 1e-8):
+        max_iter = 100, verbose = False, tol = 1e-8):
         self.max_iter = max_iter
-        self.verbal   = verbal
+        self.verbose   = verbose
         self.tol      = tol
         self.lambda1  = lambda1
         self.eta      = eta
@@ -101,7 +101,7 @@ def DLSI_updateD(D, E, F, A, lambda1, opts):
         e2    = rho*normF2(Z_new - Z_old)
         if e1 < tol and e2 < tol:
             break 
-        if opts.verbal:
+        if opts.verbose:
             cost = calc_cost(D)
             print 'iter = %3d | costD = %5.4f | normF2(D - Z) = %5.4f | rho(Z_new - Z_old = %5.4f' \
                 %(it, cost, e1, e2)
@@ -123,7 +123,7 @@ def DLSI_updateD_test():
     F       = np.dot(X, X.T)
     A       = normc(np.random.rand(k2, d))
     lambda1 = 0.01;
-    opts    = Opts_DLSI(max_iter           = 300, verbal = True, lambda1 = 0.01)
+    opts    = Opts_DLSI(max_iter           = 300, verbose = True, lambda1 = 0.01)
     DLSI_updateD(D, E, F, A, lambda1, opts)
 
 # DLSI_updateD_test()
@@ -166,33 +166,33 @@ def DLSI(Y, Y_range, opts):
     lambda1 = opts.lambda1
     eta = opts.eta 
     # initialization 
-    if opts.verbal:
+    if opts.verbose:
         print 'Cost = %.5f' % DLSI_cost(Y, Y_range, D, D_range, X, opts)
         print 'Initiallizing... class:'
 
     opts_init = Opts_DLSI(lambda1 = lambda1, \
                                 eta = opts.eta, \
                                 max_iter = 50, \
-                                verbal = False)
+                                verbose = False)
     for c in range(C):
-        if opts.verbal:
+        if opts.verbose:
             print '%3d' %(c +1),
             if (c+1)%10 == 0:
                 print '' # newline 
         Yc = get_block_col(Y, c, Y_range)
         Dc, X[c] = ODL(Yc, D_range[c+1] - D_range[c], opts.lambda1, opts_init)
         D[:, D_range[c]: D_range[c + 1]] = Dc 
-    if opts.verbal:
+    if opts.verbose:
         print '\ncost_init = %.4f' %DLSI_cost(Y, Y_range, D, D_range, X, opts)
 
     it = 0 
     optsX = Opts_DLSI(lambda1 = opts.lambda1,\
                         max_iter = 300,\
-                        verbal = False)
+                        verbose = False)
     optsD = Opts_DLSI(lambda1 = opts.lambda1,\
                         max_iter = 100,\
                         eta = opts.eta,\
-                        verbal = False)
+                        verbose = False)
     t1 = time.time()
     ## MAIN algorithm
     while it < opts.max_iter:
@@ -202,7 +202,7 @@ def DLSI(Y, Y_range, opts):
             Yc   = get_block_col(Y, c, Y_range)
             Dc   = get_block_col(D, c, D_range)
             X[c] = lasso_fista(Yc, Dc, X[c], opts.lambda1, optsX)[0]
-        if opts.verbal:
+        if opts.verbose:
             costX = DLSI_cost(Y, Y_range, D, D_range, X, opts)
             print 'iter = %3d' %it, '/%3d' %opts.max_iter, '| costX = %.4f' %costX 
 
@@ -217,7 +217,7 @@ def DLSI(Y, Y_range, opts):
             A  = D_comc.T
             D[:, D_range[c]: D_range[c+1]] = DLSI_updateD(Dc, E, F, A, eta, optsD)
         t2 = time.time()
-        if opts.verbal:
+        if opts.verbose:
             costD = DLSI_cost(Y, Y_range, D, D_range, X, opts)
             print '                  costD = %.4f' %costD,
             t = (t2 - t1)*(opts.max_iter - it)/it 
@@ -234,7 +234,7 @@ def DLSI_test():
     Y       = normc(np.random.rand(d, N*C))
     Y_range = N*np.asarray(range(C+1))
     D_range = k*np.asarray(range(C+1))
-    opts    = Opts_DLSI(max_iter = 100, D_range = D_range, lambda1 = 0.001, eta = 0.1, verbal = True)
+    opts    = Opts_DLSI(max_iter = 100, D_range = D_range, lambda1 = 0.001, eta = 0.1, verbose = True)
     DLSI(Y, Y_range, opts)
 
 # DLSI_test()
@@ -292,7 +292,7 @@ def DLSI_top(dataset, n_c, k, alambda, eta):
     opts = Opts_DLSI(  max_iter = 100, \
                         lambda1 = alambda, \
                         D_range = D_range,\
-                        verbal  = True,\
+                        verbose  = True,\
                         eta     = eta)
     Y_range     = label_to_range(label_train)
     ## Train 
@@ -305,6 +305,7 @@ def DLSI_top(dataset, n_c, k, alambda, eta):
     acc = calc_acc(pred, label_test)
     print acc 
     print "...done test"
+    return acc 
 
 def DLSI_top_test():
     DLSI_top('myYaleB', 15, 10, 0.001, .01)

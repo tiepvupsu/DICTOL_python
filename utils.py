@@ -319,7 +319,7 @@ def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F):
         x_old = x_new.copy()
         t_old = t_new
         y_old = y_new.copy()
-        if opts.verbal:
+        if opts.verbose:
             cost_new = fn_calc_F(x_new)
             # if cost_new <= cost_old:
             #     stt = 'YES.'
@@ -387,7 +387,7 @@ class Opts:
     """ 
     def __init__(self, tol = 1e-8, max_iter = 100, show_cost = False,\
         test_mode = False, lambda1 = None, lambda2 = None, lambda3 = None, \
-        eta = None, check_grad = False, verbal = False):
+        eta = None, check_grad = False, verbose = False):
         self.tol        = tol 
         self.max_iter   = max_iter 
         self.show_cost  = show_cost 
@@ -396,7 +396,7 @@ class Opts:
         self.lambda1    = lambda1 
         self.lambda2    = lambda2 
         self.lambda3    = lambda3 
-        self.verbal     = verbal
+        self.verbose     = verbose
 
     def copy(self):
         opts = Opts()

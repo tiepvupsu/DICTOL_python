@@ -30,7 +30,7 @@ Yc = get_block_col(Y, c, Y_range)
 Xc = zeros(D.shape[1], Yc.shape[1])
 D_range = D_range_ext[: -1]
 
-opts = Opts_COPAR(max_iter = 300, verbal = True, tol = 1e-8, \
+opts = Opts_COPAR(max_iter = 300, verbose = True, tol = 1e-8, \
     D_range_ext = D_range_ext, lambda1 = 0.01, eta = 0.1)
 
 DCp1 = get_block_col(D, C, D_range_ext)

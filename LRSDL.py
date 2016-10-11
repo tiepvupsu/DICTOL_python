@@ -5,10 +5,10 @@ from my_opti import *
 from matlab_syntax import *
 
 class Opts_LRSDL:
-    def __init__(self, verbal = False, max_iter = 100, tol = 1e-8, k = 0, \
+    def __init__(self, verbose = False, max_iter = 100, tol = 1e-8, k = 0, \
         k0 = 0, D_range_ext = np.array([0]), lambda1 = 0.001, lambda2 = 0.01,\
         eta = 0.01, check_grad = False):
-        self.verbal      = verbal
+        self.verbose      = verbose
         self.max_iter    = max_iter
         self.tol         = tol
         self.k           = k
@@ -160,7 +160,7 @@ def LRSDL_init(Y, Y_range, opts):
     ## class-specific dictionary 
     optsODL = Opts(max_iter = 50, tol = 1e-8, show_cost = 0)
     for c in xrange(C):
-        if opts.verbal:
+        if opts.verbose:
             print '%3d' %(c+1), 
             if c%10 == 9:
                 print '\n',
@@ -169,7 +169,7 @@ def LRSDL_init(Y, Y_range, opts):
             ODL(Yc, D_range_ext[c+1] - D_range_ext[c], opts.lambda1, optsODL)
         X[D_range_ext[c]:D_range_ext[c+1], Y_range[c]:Y_range[c+1]] = \
             Xcc.copy()
-    if opts.verbal:
+    if opts.verbose:
         print '\n',
     ## shared dictionary 
     k0 = D_range_ext[-1] - D_range_ext[-2]
@@ -232,7 +232,7 @@ def LRSDL(Y, Y_range, opts):
     print opts.max_iter 
     while it < opts.max_iter:
         it += 1 
-        if opts.verbal:
+        if opts.verbose:
             print 'iter %3d/%3d |'% (it, opts.max_iter)
             print 'updating XX0...',
         ## updateXX0 
@@ -260,20 +260,20 @@ def LRSDL(Y, Y_range, opts):
         D = np.delete(D, unused_id, axis = 1)
         X = np.delete(X, unused_id, axis = 0) 
         range_reduce(D_range, unused_id)
-        if opts.verbal:
+        if opts.verbose:
             print 'costX ',  LRSDL_cost(Y, Y_range, D, D_range, D0, X, X0, opts)
             ## update D 
             print 'updating D  ...',
         D, _ = LRSDL_updateD_fast(Y, Y_range, D, D_range, D0, X, X0, optsD)
-        if opts.verbal: 
+        if opts.verbose: 
             print 'costD ',  LRSDL_cost(Y, Y_range, D, D_range, D0, X, X0, opts)
         ## update D0
         if not is_fddl:
-            if opts.verbal: 
+            if opts.verbose: 
                 print 'updating D0 ...',
             D0 = LRSDL_updateD0(Y, Y_range, D, D_range, D0, X, X0, optsD0)
             # print D0.shape
-            if opts.verbal: 
+            if opts.verbose: 
                 print 'costD0', LRSDL_cost(Y, Y_range, D, D_range, D0, X, X0, opts)
 
     M = build_mean_vector(X, Y_range)
@@ -435,7 +435,7 @@ def LRSDL_top(dataset, n_c, k, k0, lambda1, lambda2, eta):
                     D_range_ext = D_range_ext,\
                     lambda1     = lambda1, \
                     lambda2     = lambda2, \
-                    verbal      = True,
+                    verbose      = True,
                     eta         = eta)
     ## Train 
     print "Training ...",
