@@ -3,10 +3,11 @@ from ODL import *
 from FDDL import *
 from my_opti import *
 from matlab_syntax import *
+
 class Opts_LRSDL:
     def __init__(self, verbal = False, max_iter = 100, tol = 1e-8, k = 0, \
-        k0 = 0, D_range_ext = np.array([0]), lambda1, lambda2,\
-        eta, check_grad = False):
+        k0 = 0, D_range_ext = np.array([0]), lambda1 = 0.001, lambda2 = 0.01,\
+        eta = 0.01, check_grad = False):
         self.verbal      = verbal
         self.max_iter    = max_iter
         self.tol         = tol
@@ -406,7 +407,7 @@ def LRSDL_top(dataset, n_c, k, k0, lambda1, lambda2, eta):
             http://www.personal.psu.edu/thv102/
     ---------------------------------------------
     """
-    print "Apply LRSDL on " + dataset + "with parameters:"
+    print "Apply LRSDL on " + dataset + " with parameters:"
     print "n_c: ", n_c, '\nk: ', k, '\nk0: ', k0, '\nlambda1: ',\
             lambda1, '\nlambda2: ', lambda2, '\neta: ', eta
     ## get data
@@ -462,7 +463,7 @@ def LRSDL_top(dataset, n_c, k, k0, lambda1, lambda2, eta):
 def LRSDL_top_test():
     # LRSDL_top(dataset, N_train, k, k0, lambda1, lambda2, eta)
     
-    LRSDL_top('myYaleB', 2, 1, 1, 0.001, 0.01, .1)
-    # LRSDL_top('myYaleB', 15, 10, 5, 0.001, 0.01, .1)
+    # LRSDL_top('myYaleB', 2, 1, 1, 0.001, 0.01, .1)
+    LRSDL_top('myYaleB', 10, 10, 5, 0.001, 0.01, .1)
 # LRSDL_init_test()
-
+LRSDL_top_test()
