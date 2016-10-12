@@ -12,7 +12,7 @@ _This Toolbox is a part of our [LRSDL project](http://signal.ee.psu.edu/lrsdl.ht
 
 _This repository is under construction, it contains the following methods: SRC, ODL, DLSI, FDDL, COPAR, LRSDL_
 
-If you experience any bugs, please let me know via the 'Issues' tab. I'd really appreciate and fix the error ASAP. Thank you.
+If you experience any bugs, please let me know via the [**Issues**](https://github.com/tiepvupsu/DICTOL_python/issues) tab. I'd really appreciate and fix the error ASAP. Thank you.
 
 For more information, please see its corresponding [**MATLAB version**](https://github.com/tiepvupsu/DICTOL).
 
