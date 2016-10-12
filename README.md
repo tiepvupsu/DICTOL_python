@@ -1,5 +1,5 @@
 
-# DICTOL - A Discriminative dictionary Learning Toolbox for Classification (Python version).
+# DICTOL - A Discriminative dictionary Learning Toolbox for Classification (Python 2.7 version).
 _This Toolbox is a part of our [LRSDL project](http://signal.ee.psu.edu/lrsdl.html)._
 
 **Related publications:**
