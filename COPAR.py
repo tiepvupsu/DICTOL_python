@@ -398,18 +398,19 @@ def COPAR_top(dataset, n_c, k, k0, alambda, eta, verbose = False, show_progress 
     ##
     print "Test...",
     print "GC: "
-    for gamma in [0.001, 0.005, 0.01]:
+    # for gamma in [0.001, 0.005, 0.01]:
+    for gamma in [0.001]:
         print 'gamma = %.4f' % gamma,
         pred = COPAR_pred_GC(Y_test, D, gamma, opts)
         acc = calc_acc(pred, label_test)
         print '| acc = %2.2f%%' % (100 * acc)
 
-    print "LC: "
-    for gamma in [0.001, 0.005, 0.01]:
-        print 'gamma = %.4f' % gamma,
-        pred = COPAR_pred_LC(Y_test, D, gamma, opts)
-        acc = calc_acc(pred, label_test)
-        print '| acc = %2.2f%%' % (100 * acc)
+    # print "LC: "
+    # for gamma in [0.001, 0.005, 0.01]:
+    #     print 'gamma = %.4f' % gamma,
+    #     pred = COPAR_pred_LC(Y_test, D, gamma, opts)
+    #     acc = calc_acc(pred, label_test)
+    #     print '| acc = %2.2f%%' % (100 * acc)
 
     return np.amax(acc)
     print "...done test"
