@@ -293,7 +293,7 @@ def DLSI_top(dataset, n_c, k, alambda, eta, verbose = False, show_progress = Tru
 
     C = np.unique(label_train).size 
     D_range     = k*np.arange(C+1)
-    opts = Opts_DLSI(   max_iter = 20, \
+    opts = Opts_DLSI(   max_iter = 100, \
                         lambda1  = alambda, \
                         D_range  = D_range,\
                         verbose  = verbose,\

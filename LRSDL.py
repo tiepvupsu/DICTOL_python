@@ -185,7 +185,8 @@ def FDDL_init(Y, Y_range, opts, show_progress = False):
             sys.stdout.write("\r%s class: %d/%d" % (str0, c+1, C ))
             sys.stdout.flush()
     # if opts.verbose:
-    print '\n',
+    if not opts.verbose and show_progress:
+        print '\n',
     ## shared dictionary 
     return (D, X)
 
@@ -746,7 +747,9 @@ def FDDL(Y, Y_range, opts, show_progress = False):
             str0 = progress_str(it, opts.max_iter, 50)
             sys.stdout.write("\r%s %.2f%%" % (str0, (it*100.0)/opts.max_iter ))
             sys.stdout.flush()
-    print ''
+            
+    if not opts.verbose and show_progress:
+        print ''
     M = build_mean_vector(X, Y_range)
     return (D, X, M, opts)
 

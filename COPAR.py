@@ -53,7 +53,7 @@ def COPAR_cost(Y, Y_range, D, D_range_ext, X, opts):
     cost = cost + cost1 + .5*eta*DLSI_term(D, D_range_ext)
     return cost 
 
-def COPAR_init(Y, Y_range, opts):
+def COPAR_init(Y, Y_range, opts, show_progress = False):
     C           = numel(Y_range) - 1
     D_range_ext = opts.D_range_ext
     D_range     = D_range_ext[:-1]
@@ -72,6 +72,14 @@ def COPAR_init(Y, Y_range, opts):
         Dc, Xcc = ODL(Yc, D_range[c+1] - D_range[c], opts.lambda1, opts)
         D[:, D_range[c]: D_range[c+1]] = Dc 
         X[D_range[c]: D_range[c+1], Y_range[c] : Y_range[c+1]] = Xcc 
+        ## progress bar 
+        if not opts.verbose and show_progress:
+            str0 = progress_str(c+1, C)
+            sys.stdout.write("\r%s class: %d/%d" % (str0, c+1, C ))
+            sys.stdout.flush()
+    # if opts.verbose:
+    if not opts.verbose and show_progress:
+        print '\n',
     if k0 > 0:
         DCp1, XCp1 = ODL(Y, k0, opts.lambda1, opts)
         D[:, D_range_ext[-2]: D_range_ext[-1]] = DCp1 
@@ -236,14 +244,14 @@ def COPAR_updateD(Y, Y_range, D, X, opts):
 
     return D 
 
-def COPAR(Y, Y_range, opts):
+def COPAR(Y, Y_range, opts, show_progress = False):
     C = numel(Y_range) - 1
     D_range_ext = opts.D_range_ext
     D_range = D_range_ext[: -1]
     ## INIT 
     opts_init = Opts_COPAR(max_iter = 30, verbose = False, lambda1 = opts.lambda1,\
                 eta = opts.eta, D_range_ext = opts.D_range_ext)
-    D, X = COPAR_init(Y, Y_range, opts_init)
+    D, X = COPAR_init(Y, Y_range, opts_init, show_progress)
     ## opts for X and D 
     optsX = Opts_COPAR(max_iter = 300, verbose = False, lambda1 = opts.lambda1, \
                         D_range_ext = opts.D_range_ext)
@@ -251,6 +259,7 @@ def COPAR(Y, Y_range, opts):
                         eta = opts.eta, D_range_ext = opts.D_range_ext)
     it = 0 
     t1 = time.time()
+    print "Main Algorithm..."
     ## MAIN algorithm
     while it < opts.max_iter:
         it += 1
@@ -278,7 +287,13 @@ def COPAR(Y, Y_range, opts):
                 break 
         if (t2 - t1) > 20*3600:
             break 
-
+        if not opts.verbose and show_progress:
+            str0 = progress_str(it, opts.max_iter, 50)
+            sys.stdout.write("\r%s %.2f%%" % (str0, (it*100.0)/opts.max_iter ))
+            sys.stdout.flush()
+            
+    if not opts.verbose and show_progress:
+        print ''
     return (D, X)
 
 def COPAR_test():
@@ -349,7 +364,7 @@ def COPAR_pred_LC(Y, D, gamma, opts):
 
 
 
-def COPAR_top(dataset, n_c, k, k0, alambda, eta):
+def COPAR_top(dataset, n_c, k, k0, alambda, eta, verbose = False, show_progress = True):
     """
     COPAR_top(dataset, n_c, k, alambda, eta)
     ---------------------------------------------
@@ -357,54 +372,46 @@ def COPAR_top(dataset, n_c, k, k0, alambda, eta):
             http://www.personal.psu.edu/thv102/
     ---------------------------------------------
     """
+    print "===============COPAR==============="
     print "Apply COPAR on " + dataset + "with parameters:"
     print "n_c: ", n_c, '\nk: ', k, '\nlambda: ',\
             alambda, '\neta: ', eta
+    print '-------------------'
     ## get data
-    print "\nPreparing training and test samples...",
+    # print "\nPreparing training and test samples...",
     dataset, Y_train, Y_test, label_train, label_test = \
         train_test_split(dataset, n_c)
-    print "done"
-    ## output filename 
-    path = 'results/COPAR'
-    if not os.path.exists(path):
-        os.makedirs(path)
-    t = get_time_str()
-    fn = os.path.join('results', 'COPAR', dataset + '_N_'+ str(n_c) + \
-        '_k_' + str(k) + '_l_' + str(alambda) + '_e_' + str(eta) + '_' + t \
-        + '.pickle')
-    output_file = open(fn, 'w+')
     ## Prepare parameters
     C = np.unique(label_train).size 
     D_range    = k*np.arange(C+1)
     D_range_ext = np.hstack((D_range, D_range[-1]+k0))
-    opts = Opts_COPAR(  max_iter = 2, \
-                        lambda1 = alambda, \
+    opts = Opts_COPAR(  max_iter = 20, \
+                        lambda1     = alambda, \
                         D_range_ext = D_range_ext,\
-                        verbose  = True,\
-                        eta     = eta)
+                        verbose     = verbose,\
+                        eta         = eta)
     Y_range     = label_to_range(label_train)
     ## Train 
     print "Training ..."
-    D, X = COPAR(Y_train, Y_range, opts)
+    D, X = COPAR(Y_train, Y_range, opts, show_progress)
     print "...done training"
     ##
     print "Test...",
     print "GC: "
-    for gamma in [0.0001, 0.001, 0.005, 0.01]:
+    for gamma in [0.001, 0.005, 0.01]:
         print 'gamma = %.4f' % gamma,
         pred = COPAR_pred_GC(Y_test, D, gamma, opts)
         acc = calc_acc(pred, label_test)
         print '| acc = %2.2f%%' % (100 * acc)
 
     print "LC: "
-    for gamma in [0.0001, 0.001, 0.005, 0.01]:
+    for gamma in [0.001, 0.005, 0.01]:
         print 'gamma = %.4f' % gamma,
         pred = COPAR_pred_LC(Y_test, D, gamma, opts)
         acc = calc_acc(pred, label_test)
         print '| acc = %2.2f%%' % (100 * acc)
 
-
+    return np.amax(acc)
     print "...done test"
 
 def COPAR_top_test():
