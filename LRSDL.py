@@ -1,7 +1,5 @@
 from utils import * 
 from ODL import *
-from FDDL import *
-from my_opti import *
 from matlab_syntax import *
 
 class Opts_LRSDL:
