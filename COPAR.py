@@ -373,7 +373,7 @@ def COPAR_top(dataset, n_c, k, k0, alambda, eta, verbose = False, show_progress 
     ---------------------------------------------
     """
     print "===============COPAR==============="
-    print "Apply COPAR on " + dataset + "with parameters:"
+    print "Apply COPAR on " + dataset + " with parameters:"
     print "n_c: ", n_c, '\nk: ', k, '\nlambda: ',\
             alambda, '\neta: ', eta
     print '-------------------'

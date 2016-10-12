@@ -282,7 +282,7 @@ def DLSI_top(dataset, n_c, k, alambda, eta, verbose = False, show_progress = Tru
     ---------------------------------------------
     """
     print "=================DLSI================="
-    print "Apply DLSI on " + dataset + "with parameters:"
+    print "Apply DLSI on " + dataset + " with parameters:"
     print "n_c: ", n_c, '\nk: ', k, '\nlambda: ',\
             alambda, '\neta: ', eta
     print '------------------'

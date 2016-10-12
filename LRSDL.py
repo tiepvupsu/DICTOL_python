@@ -463,7 +463,7 @@ def LRSDL_pred_GC(Y, D, D0, CoefM, m0, opts, label_test):
     # return np.maximum(acc)
     return np.amax(acc)
 
-def FDDL_top(dataset, n_c, k, lambda1, lambda2, verbose = False, show_progress = False):
+def FDDL_top(dataset, n_c, k, lambda1, lambda2, verbose = False, show_progress = True):
     # return LRSDL_top(dataset, n_c, k, 0, lambda1, lambda2, 0)
     print "===============FDDL======================"
     print "Apply FDDL on " + dataset + " with parameters:"
@@ -504,7 +504,7 @@ def FDDL_top(dataset, n_c, k, lambda1, lambda2, verbose = False, show_progress =
     # close(output_file)
     return acc
 
-def LRSDL_top(dataset, n_c, k, k0, lambda1, lambda2, eta, verbose = False, show_progress = False):
+def LRSDL_top(dataset, n_c, k, k0, lambda1, lambda2, eta, verbose = False, show_progress = True):
     """
     * Syntax `LRSDL_top(dataset, n_c, k, k0, lambda1, lambda2, eta)`
     ---------------------------------------------
