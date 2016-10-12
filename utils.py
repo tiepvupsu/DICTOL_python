@@ -4,6 +4,7 @@ from matlab_syntax import *
 # import scipy.io as sio
 import cPickle
 import math 
+import sys
 import time 
 from time import strftime
 # from six.moves import cPickle as pickle
@@ -163,6 +164,8 @@ def norm1(X):
     of that matrix.
     """
     # pass 
+    if X.shape[0]*X.shape[1] == 0:
+        return 0 
     return abs(X).sum()
     # return LA.norm(X, 1)
 
@@ -181,6 +184,8 @@ def normF2(X):
     * Syntax: `res = normF2(X)`
     """
     # pass
+    if X.shape[0]*X.shape[1] == 0:
+        return 0 
     return LA.norm(X, 'fro')**2  
 
 def normF2_test():
@@ -271,7 +276,7 @@ def min_rank_dict0_test():
     lambdaD = 0.01
     D = min_rank_dict0(Y, X, lambdaD, D, opts)
 
-def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F):
+def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F, show_progress = False):
     """
     * A Fast Iterative Shrinkage-Thresholding Algorithm for Linear Inverse 
             Problems.
@@ -328,9 +333,15 @@ def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F):
             print 'iter = '+str(it)+', cost = %4.4f' % cost_new #\
                 # ', cost decreases? ',     stt 
             cost_old = cost_new 
+        if not opts.verbose and show_progress and it%10 == 0:
+            str0 = progress_str(it, opts.max_iter, 50)
+            sys.stdout.write("\r%s %.2f%%" % (str0, (it*100.0)/opts.max_iter ))
+            sys.stdout.flush()
+    if not opts.verbose and show_progress and it%10 == 0:
+        print ''
     return (x_new, it)
 
-def lasso_fista(Y, D, Xinit, alambda, opts):
+def lasso_fista(Y, D, Xinit, alambda, opts, show_progress = False):
     """
     * Syntax: `[X, iter] = lasso_fista(Y, D, Xinit, lambda, opts)`
     * Solving a Lasso problem using FISTA [[11]](#fn_fista): 
@@ -367,7 +378,7 @@ def lasso_fista(Y, D, Xinit, alambda, opts):
         g =  np.dot(DtD, X) - DtY 
         return g 
     L = np.max(LA.eig(DtD)[0])
-    (X, it) = fista(grad, Xinit, L, alambda, opts, calc_F)
+    (X, it) = fista(grad, Xinit, L, alambda, opts, calc_F, show_progress)
     return (X, it)
 
 def lasso_fista_test():
@@ -651,7 +662,7 @@ def myload(filename):
     # return testPickle.pickle_load(filename)
     # print A['label_test']
 
-def SRC_pred(Y, D, D_range, lambda1, opts):
+def SRC_pred(Y, D, D_range, lambda1, opts, show_progress = False):
     """
     * Classification based on SRC.
     * Syntax: `[pred, X] = SRC_pred(Y, D, D_range, lambda1, opts)`
@@ -679,7 +690,8 @@ def SRC_pred(Y, D, D_range, lambda1, opts):
     pred = np.zeros((1, Y.shape[1]))
 
     print "sparse coding...",
-    X,_ = lasso_fista(Y, D, np.array([]), lambda1, opts)
+    print ''
+    X,_ = lasso_fista(Y, D, np.array([]), lambda1, opts, show_progress)
     print "done"
 
     E = np.zeros((C, Y.shape[1]))
@@ -692,7 +704,7 @@ def SRC_pred(Y, D, D_range, lambda1, opts):
 
     pred = np.argmin(E, axis = 0) + 1
 
-    return pred 
+    return vec(pred) 
 
 def pickTrainTest(dataset, N_train_c):
     data_fn = os.path.join('data', dataset + '.pickle')
@@ -759,6 +771,8 @@ def build_mean_vector(X, Y_range):
     """
     M = build_mean_vector(X, Y_range)
     suppose X = [X_1 X_2 ... X_C]
+    return M = [m1, m2, ..., M_C] 
+    where mi = mean(X_i)
     """
     C = Y_range.size -1 
     # import pdb; pdb.set_trace()  # breakpoint 750a8d83 //
@@ -820,19 +834,25 @@ def train_test_split(dataset, N_train):
     return (dataset, Y_train, Y_test, \
             label_train.astype(int), label_test.astype(int))
 
-def SRC_top(dataset, N_train, lambda1):
+def SRC_top(dataset, N_train, lambda1, verbose = False, show_progress = True):
+    print "===================SRC=================="
     dataset, Y_train, Y_test, label_train, label_test = \
         train_test_split(dataset, N_train)
 
-    opts = Opts(max_iter = 500, show_cost = True, test_mode = False)
+    opts = Opts(max_iter = 500, verbose = verbose, test_mode = False)
     train_range = label_to_range(label_train)
 
-    pred = SRC_pred(Y_test, Y_train, train_range, lambda1, opts)
+    pred = SRC_pred(Y_test, Y_train, train_range, lambda1, opts, show_progress)
     # print pred 
-    acc = float(sum(pred == label_test))/label_test.size 
+    acc = calc_acc(pred, label_test)
+    print 'Overall accuracy: %.2f %%' % (acc*100) 
+    print ''
+
     return acc 
 
 def build_mean_matrix(X, cols = None):
+    if X.shape[1] == 0:
+        return X
     m = np.mean(X, axis = 1)
     if cols == None: 
         return repmat(m, 1, X.shape[1]) 
@@ -1043,3 +1063,7 @@ def inv_IpXY_test():
     # print opts.max_iter 
     # opts2.max_iter = 0
     # print opts.max_iter 
+
+def progress_str(cur_val, max_val, total_point=50):
+    p = int(math.ceil(float(cur_val)*total_point/ max_val))
+    return '|' + p*'#'+ (total_point - p)*'.'+ '|' 

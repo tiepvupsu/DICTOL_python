@@ -211,17 +211,17 @@ def COPAR_updateD(Y, Y_range, D, X, opts):
         #  and solved using DLSI_updateD
         Dc_range = range(D_range_ext[c], D_range_ext[c+1])
         Yc_range = range(Y_range[c], Y_range[c+1])
-        Yc = Y[:, Yc_range]
-        Dc = D[:, Dc_range]
-        Xc = X[:, Yc_range]
-        Xcc = Xc[Dc_range, :]
-        XCp1c = get_block_row(Xc, C, D_range_ext)
-        Ychat = Yc - np.dot(D, Xc) + np.dot(Dc, Xcc)
-        Ycbar = Yc - np.dot(DCp1, XCp1c)
-        E = np.dot(Ychat + Ycbar, Xcc.T)
-        F = 2*np.dot(Xcc, Xcc.T)
-        A = D.copy()
-        A = np.delete(A, Dc_range, axis = 1)
+        Yc       = Y[:, Yc_range]
+        Dc       = D[:, Dc_range]
+        Xc       = X[:, Yc_range]
+        Xcc      = Xc[Dc_range, :]
+        XCp1c    = get_block_row(Xc, C, D_range_ext)
+        Ychat    = Yc - np.dot(D, Xc) + np.dot(Dc, Xcc)
+        Ycbar    = Yc - np.dot(DCp1, XCp1c)
+        E        = np.dot(Ychat + Ycbar, Xcc.T)
+        F        = 2*np.dot(Xcc, Xcc.T)
+        A        = D.copy()
+        A        = np.delete(A, Dc_range, axis = 1)
         D[:, Dc_range] = DLSI_updateD(Dc, E, F, A.T, opts.eta, optsD)
         Yhat[:, Yc_range] = Yc - np.dot(D[:, Dc_range], Xcc)
         # print COPAR_cost(Y, Y_range, D, opts.D_range_ext, X, opts)

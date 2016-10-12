@@ -37,6 +37,8 @@ def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
             http://www.personal.psu.edu/thv102/
     ---------------------------------------------
     """
+
+
     YXt = np.dot(Y, X.T)
     XXt = np.dot(X, X.T)
     rho = 0.25 
@@ -57,7 +59,7 @@ def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
         E = YXt + rho*(J_old + U_old)
         F = XXt + rho*I
         # D_new = updateD_EF(D_old, E, F, 10);
-        D_new = ODL_updateD(D_old, E, F, optsD)[0]
+        D_new = ODL_updateD(D_old, E, F, optsD)
         ## ========= update J ==============================
         # J^{k+1} = argminJ lambdaD||J||_* + rho/2||J - D + U||
         J_new = np.real(shrinkage_rank(D_new - U_old, lambdaD/rho))

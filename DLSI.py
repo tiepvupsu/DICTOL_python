@@ -92,7 +92,7 @@ def DLSI_updateD(D, E, F, A, lambda1, opts):
         E2 = E + rho/2*W 
         F2 = F + rho/2*I_k 
         # D_old = D.copy() 
-        D  = ODL_updateD(D, E2, F2, optsD)[0]
+        D  = ODL_updateD(D, E2, F2, optsD)
         # print normF2(D - D_old)
         # update Z 
         V     = D + U
@@ -128,7 +128,7 @@ def DLSI_updateD_test():
 
 # DLSI_updateD_test()
 
-def DLSI(Y, Y_range, opts):
+def DLSI(Y, Y_range, opts, show_progress = False):
     """
      Syntax: `D, X = DLSI(Y, Y_range, opts)`
     * The main DLSI algorithm 
@@ -174,6 +174,7 @@ def DLSI(Y, Y_range, opts):
                                 eta = opts.eta, \
                                 max_iter = 50, \
                                 verbose = False)
+    print 'Initializing...'
     for c in range(C):
         if opts.verbose:
             print '%3d' %(c +1),
@@ -182,6 +183,11 @@ def DLSI(Y, Y_range, opts):
         Yc = get_block_col(Y, c, Y_range)
         Dc, X[c] = ODL(Yc, D_range[c+1] - D_range[c], opts.lambda1, opts_init)
         D[:, D_range[c]: D_range[c + 1]] = Dc 
+        if not opts.verbose and show_progress:
+            str0 = progress_str(c+1, C)
+            sys.stdout.write("\r%s class: %d/%d" % (str0, c+1, C ))
+            sys.stdout.flush()
+    print '\n',
     if opts.verbose:
         print '\ncost_init = %.4f' %DLSI_cost(Y, Y_range, D, D_range, X, opts)
 
@@ -203,8 +209,9 @@ def DLSI(Y, Y_range, opts):
             Dc   = get_block_col(D, c, D_range)
             X[c] = lasso_fista(Yc, Dc, X[c], opts.lambda1, optsX)[0]
         if opts.verbose:
+            print '\niter = %3d' %it, '/%3d' %opts.max_iter,
             costX = DLSI_cost(Y, Y_range, D, D_range, X, opts)
-            print 'iter = %3d' %it, '/%3d' %opts.max_iter, '| costX = %.4f' %costX 
+            print '| costX = %.4f' %costX,
 
         # update D 
         for c in xrange(C):
@@ -224,6 +231,11 @@ def DLSI(Y, Y_range, opts):
             time_estimate(t)
         if t2 - t1 > 20*3600: # 20h
             break 
+        if not opts.verbose and show_progress:
+            str0 = progress_str(it, opts.max_iter, 50)
+            sys.stdout.write("\r%s %.2f%%" % (str0, (it*100.0)/opts.max_iter ))
+            sys.stdout.flush()
+    print ''
     return (D, X)
 
 def DLSI_test():
@@ -234,7 +246,7 @@ def DLSI_test():
     Y       = normc(np.random.rand(d, N*C))
     Y_range = N*np.asarray(range(C+1))
     D_range = k*np.asarray(range(C+1))
-    opts    = Opts_DLSI(max_iter = 100, D_range = D_range, lambda1 = 0.001, eta = 0.1, verbose = True)
+    opts    = Opts_DLSI(max_iter = 100, D_range = D_range, lambda1 = 0.001, eta = 0.1, verbose = False)
     DLSI(Y, Y_range, opts)
 
 # DLSI_test()
@@ -261,7 +273,7 @@ def DLSI_pred(Y, D, opts):
 
     return pred 
 
-def DLSI_top(dataset, n_c, k, alambda, eta):
+def DLSI_top(dataset, n_c, k, alambda, eta, verbose = False, show_progress = True):
     """
     DLSI_top(dataset, n_c, k, alambda, eta)
     ---------------------------------------------
@@ -269,42 +281,36 @@ def DLSI_top(dataset, n_c, k, alambda, eta):
             http://www.personal.psu.edu/thv102/
     ---------------------------------------------
     """
+    print "=================DLSI================="
     print "Apply DLSI on " + dataset + "with parameters:"
     print "n_c: ", n_c, '\nk: ', k, '\nlambda: ',\
             alambda, '\neta: ', eta
+    print '------------------'
     ## get data
-    print "\nPreparing training and test samples...",
+    # print "\nPreparing training and test samples...",
     dataset, Y_train, Y_test, label_train, label_test = \
         train_test_split(dataset, n_c)
-    print "done"
-    ## output filename 
-    path = 'results/DLSI'
-    if not os.path.exists(path):
-        os.makedirs(path)
-    t = get_time_str()
-    fn = os.path.join('results', 'DLSI', dataset + '_N_'+ str(n_c) + \
-        '_k_' + str(k) + '_l_' + str(alambda) + '_e_' + str(eta) + '_' + t \
-        + '.pickle')
-    output_file = open(fn, 'w+')
-    ## Prepare parameters
+
     C = np.unique(label_train).size 
     D_range     = k*np.arange(C+1)
-    opts = Opts_DLSI(  max_iter = 100, \
-                        lambda1 = alambda, \
-                        D_range = D_range,\
-                        verbose  = True,\
-                        eta     = eta)
+    opts = Opts_DLSI(   max_iter = 20, \
+                        lambda1  = alambda, \
+                        D_range  = D_range,\
+                        verbose  = verbose,\
+                        eta      = eta)
     Y_range     = label_to_range(label_train)
     ## Train 
     print "Training ...",
-    D, X = DLSI(Y_train, Y_range, opts)
+    D, X = DLSI(Y_train, Y_range, opts, show_progress)
     print "...done training"
     ##
     print "Test...",
     pred = DLSI_pred(Y_test, D,  opts)
     acc = calc_acc(pred, label_test)
-    print acc 
-    print "...done test"
+    # print acc 
+    print 'Overall accuracy: %.2f %%' % (acc*100) 
+    print ''
+    # print "...done test"
     return acc 
 
 def DLSI_top_test():

@@ -48,7 +48,7 @@ def ODL_updateD(D, E, F, opts):
 		if LA.norm(D - D_old, 'fro')/sizeD < opts.tol:
 			break 
 		D_old = D.copy()
-	return (D, it) 
+	return D 
 
 def ODL(Y, k, lambda1, opts, method = 'fista'):
 	"""
@@ -91,7 +91,7 @@ def ODL(Y, k, lambda1, opts, method = 'fista'):
 		# Dictionary update
 		F = np.dot(X, X.T)
 		E = np.dot(Y, X.T) 
-		D, itd = ODL_updateD(D, E, F, optsD)
+		D = ODL_updateD(D, E, F, optsD)
 		if opts.verbose:
 			costD = ODL_cost(Y, D, X, lambda1)
 			print '          | costD = %4.4f' % costD #'it: ', itd
