@@ -655,9 +655,13 @@ def pickDfromY_test():
 def myload(filename):
     # import testPickle 
     # A = sio.loadmat(filename)
-    with open(filename, 'rb') as input_file:
+    # with open(filename, 'rb') as input_file:
     #     A = cPickle.load(input_file)
-        A = pickle.load(input_file)
+    # A = pickle.load(input_file)
+    # A = pickle.load( open(filename, "rb" ) )
+    
+    print filename
+    A = sio.loadmat(filename)
     return A 
     # return testPickle.pickle_load(filename)
     # print A['label_test']
@@ -708,7 +712,7 @@ def SRC_pred(Y, D, D_range, lambda1, opts, show_progress = False):
 
 def pickTrainTest(dataset, N_train_c):
     data_fn = os.path.join('data', dataset + '.pickle')
-    # data_fn = os.path.join('data', dataset + '.mat')
+    data_fn = os.path.join('data', dataset + '.mat')
     Vars = myload(data_fn)
     Y = Vars['Y']
     d = Y.shape[0]
