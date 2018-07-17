@@ -1,20 +1,20 @@
-# import numpy as np 
+# import numpy as np
 # from numpy import linalg as LA
 from matlab_syntax import *
 # import scipy.io as sio
 import cPickle
-import math 
+import math
 import sys
-import time 
+import time
 from time import strftime
 # from six.moves import cPickle as pickle
-import os 
-import io 
+import os
+import io
 import scipy.io as sio
 import pickle
 from ODL import *
-test = True 
-# test = False 
+test = True
+# test = False
 
 
 def get_time_str():
@@ -29,24 +29,24 @@ def label_to_range(label):
     * Convert from Labels to Ranges
     * Example: if `label = [1 1 1 2 2 2 2 3 3]`, then `range = [0, 3, 7, 9]`.
     * Syntax: `arange = label_to_range(label)`
-        - `label`: a numpy array 
+        - `label`: a numpy array
         - `arange`: a numpy array
     """
     C = int(label.max())
     arange = np.zeros((C+1,), dtype=np.int)
     cumsum = 0
     for i in xrange(C):
-        cumsum += np.where(label == (i+1))[0].size 
-        arange[i+1] = cumsum 
+        cumsum += np.where(label == (i+1))[0].size
+        arange[i+1] = cumsum
     return arange
 
 def label_to_range_test():
     label = np.array([1, 1, 1, 2, 2, 2, 2, 3, 3])
     print "---------------------------------------\nLabel_to_range test:"
-    print "label = ", label 
+    print "label = ", label
     print "range = ", label_to_range(label)
     # ouput should be [0, 3, 7, 9]
-    # pass 
+    # pass
 
 def range_to_label(arange):
     """
@@ -54,19 +54,19 @@ def range_to_label(arange):
     * Example: if `range = [0, 3, 5]`` then `label = [1 1 1 2 2]``
     * Syntax: `label = range_to_label(range)`
     """
-    # pass 
-    C = arange.size - 1 
+    # pass
+    C = arange.size - 1
     label = np.ones((arange[-1], ), dtype=np.int)
     for i in xrange(1, C):
         n = arange[i] - arange[i-1]
-        label[arange[i]: arange[i+1]] *= (i+1) 
+        label[arange[i]: arange[i+1]] *= (i+1)
     return label
 
 def range_to_label_test():
     arange = np.array([0, 3, 5, 9])
     print "---------------------------------------\n`range_to_label` test:"
-    print "range: ", arange 
-    print "label: ", range_to_label(arange) 
+    print "range: ", arange
+    print "label: ", range_to_label(arange)
 
 def get_block_col(M, C, col_range):
     """
@@ -75,8 +75,8 @@ def get_block_col(M, C, col_range):
         - `M`: the big matrix `M = [M_1, M_2, ...., M_C]`.
         - `C`: blocks indices (start at 0).
         - `col_range`: range of samples, see `Y_range` and `D_range` above.
-    * Example: `M` has 25 columns and `col_range = [0, 10, 25]`, then 
-    `get_block_col(M, 1, col_range)` will output the first block of `M`, 
+    * Example: `M` has 25 columns and `col_range = [0, 10, 25]`, then
+    `get_block_col(M, 1, col_range)` will output the first block of `M`,
     i.e. `M(:, 1:10)`.
     """
     if isinstance(C, int):
@@ -95,7 +95,7 @@ def get_block_col_test():
     A = np.random.randint(5, size=(3, 9))
     arange = np.array([0, 4, 7, 9], dtype = np.int)
     print " A: \n", A
-    print " arange: ", arange  
+    print " arange: ", arange
     print " get_block_col(A, [1, 2], arange): \n", get_block_col(A, [1, 2], arange)
 
 def get_block_row(M, C, row_range):
@@ -103,11 +103,11 @@ def get_block_row(M, C, row_range):
     * Extract a block of rows from a matrix.
     * Syntax: `Mc = get_block_row(M, c, row_range)`
         - `M`: the big matrix `M = [M_1; M_2; ....; M_C]`.
-        - `C`: an `int`, `list` of ints or an nparray of ints   
+        - `C`: an `int`, `list` of ints or an nparray of ints
             block indices (start at 0).
         - `row_range`: range of samples, see `Y_range` and `D_range` above.
-    * Example: `M` has 40 rows and `row_range = [0, 10, 25, 40]`, then 
-    `get_block_row(M, 2, row_range)` will output the second block of `M`, 
+    * Example: `M` has 40 rows and `row_range = [0, 10, 25, 40]`, then
+    `get_block_row(M, 2, row_range)` will output the second block of `M`,
     i.e. `M(11:25, :)`.
     """
     if isinstance(C, int):
@@ -123,27 +123,27 @@ def get_block_row_test():
     A = np.random.randint(5, size=(9, 3))
     arange = np.array([0, 4, 7, 9], dtype = np.int)
     print " A: \n", A
-    print " arange: ", arange  
+    print " arange: ", arange
     print " get_block_row(A, [0, 2], arange): \n", get_block_row(A, np.array([0, 2]), arange)
 
 
 def get_block(M, i, j, row_range, col_range):
     """
-    * Extract a submatrix of a matrix 
+    * Extract a submatrix of a matrix
     * Syntax: `Mij = get_block(M, i, j, row_range, col_range)`
-        - `M` the big matrix: 
-        `M = [  M11, M12, ..., M1m; 
-                M21, M22, ..., M2m; 
-                ... ; 
+        - `M` the big matrix:
+        `M = [  M11, M12, ..., M1m;
+                M21, M22, ..., M2m;
+                ... ;
                 Mn1, Mn2, ..., Mnm]`
-        - `i`: row block index 
-        - `j`: column block index 
+        - `i`: row block index
+        - `j`: column block index
         - `row_range`: row range
-        - `col_range`: columns range 
-    * Note: `get_block(M, i, j, row_range, col_range) = 
+        - `col_range`: columns range
+    * Note: `get_block(M, i, j, row_range, col_range) =
     get_block_col(get_block_row(M, i, row_range), j, col_range).`
     """
-    # pass 
+    # pass
     return M[row_range[i]:row_range[i+1], col_range[j]: col_range[j+1]].copy()
 
 def get_block_test():
@@ -152,7 +152,7 @@ def get_block_test():
     row_range = np.array([0, 4, 7, 9], dtype = np.int)
     col_range = np.array([0, 2, 5, 9], dtype = np.int);
     print " A: \n", A
-    print " row_range: ", row_range, "; col_range: ", col_range  
+    print " row_range: ", row_range, "; col_range: ", col_range
     print " get_block(A, 1, 2, row_range, col_range): \n", \
         get_block(A, 1, 2, row_range, col_range)
 
@@ -160,39 +160,39 @@ def get_block_test():
 
 def norm1(X):
     """
-    * Return norm 1 of a matrix, which is sum of absolute value of all element 
+    * Return norm 1 of a matrix, which is sum of absolute value of all element
     of that matrix.
     """
-    # pass 
+    # pass
     if X.shape[0]*X.shape[1] == 0:
-        return 0 
+        return 0
     return abs(X).sum()
     # return LA.norm(X, 1)
 
 def norm1_test():
-    # pass 
+    # pass
     print('---------------------------------------')
     print '`norm1` test:'
-    A = np.random.randint(8, size =(2,2)) - 3 
-    print "A = \n", A 
+    A = np.random.randint(8, size =(2,2)) - 3
+    print "A = \n", A
     print "norm1(A) = ", norm1(A)
 
 def normF2(X):
     """
-    * Return square of the Frobenius norm, which is sum of square of all 
+    * Return square of the Frobenius norm, which is sum of square of all
     elements in a matrix
     * Syntax: `res = normF2(X)`
     """
     # pass
     if X.shape[0]*X.shape[1] == 0:
-        return 0 
-    return LA.norm(X, 'fro')**2  
+        return 0
+    return LA.norm(X, 'fro')**2
 
 def normF2_test():
     print('---------------------------------------')
     print '`normF2` test:'
     A = np.random.randint(8, size =(2,2)) - 5
-    print "A = \n", A 
+    print "A = \n", A
     print "normF2(A) = ", normF2(A)
 
 def is_vector(x):
@@ -202,11 +202,14 @@ def is_vector(x):
     Author: Tiep Vu, thv102@psu.edu, 04/22/2016
             http://www.personal.psu.edu/thv102/
     ---------------------------------------------
-    """ 
-    return len(x.shape) == 1 
+    """
+    return len(x.shape) == 1
 
 def normc(A):
     # return A / LA.norm(A, axis=0)[None,:]
+    """
+    normalize each column of A to have norm2 = 1
+    """
     return A/ np.tile(np.sqrt(np.sum(A*A, axis=0)), (A.shape[0], 1))
 
 def nuclearnorm(X):
@@ -219,27 +222,27 @@ def nuclearnorm(X):
     return LA.norm(X) if is_vector(X) else LA.norm(X, 'nuc')
 
 
-    pass 
+    pass
 
 def shrinkage(U, alambda):
     """
     * Soft thresholding function.
-    * Syntax: ` X = shrinkage(U, lambda)`
+    * Syntax: `X = shrinkage(U, lambda)`
     * Solve the following optimization problem:
     `X = arg min_X 0.5*||X - U||_F^2 + lambda||X||_1`
-    where `U` and `X` are matrices with same sizes. `lambda` can be either 
-    positive a scalar or a positive matrix (all elements are positive) with 
+    where `U` and `X` are matrices with same sizes. `lambda` can be either
+    positive a scalar or a positive matrix (all elements are positive) with
     same size as `X`. In the latter case, it is a weighted problem.
     """
     return np.maximum(0, U - alambda) + np.minimum(0, U + alambda)
 
 def shrinkage_test():
-    pass 
+    pass
 
 def shrinkage_rank(D, alambda):
     """
     * Singular value thresholding algorithm for matrix completion.
-    * Syntax: `Y = shrinkage_rank(D, lambda)` 
+    * Syntax: `Y = shrinkage_rank(D, lambda)`
     * Solve the following optimization problem:
       `X = arg min_X 0.5*||X - D||_F^2 + lambda*||X||_*`
       where `||X||_*` is the nuclear norm.
@@ -250,11 +253,11 @@ def shrinkage_rank(D, alambda):
 
 
 def shrinkage_rank_test():
-    # pass 
+    # pass
     print('-------------------------------------------')
     print '`shrinkage_rank` test:'
     D = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    alambda = 0.1 
+    alambda = 0.1
     print 'matlab result'
     print '    1.0586    1.9944    2.9302'
     print '    3.9944    4.9721    5.9498'
@@ -266,9 +269,9 @@ def min_rank_dict0_test():
     print '------------------------------------'
     print '`min_rank_dict0` test: '
 
-    d = 10 
-    N = 10 
-    k = 5 
+    d = 10
+    N = 10
+    k = 5
     Y = normc(np.random.rand(d, N))
     D = normc(np.random.rand(d, k))
     X = np.random.rand(k, N)
@@ -278,47 +281,47 @@ def min_rank_dict0_test():
 
 def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F, show_progress = False):
     """
-    * A Fast Iterative Shrinkage-Thresholding Algorithm for Linear Inverse 
+    * A Fast Iterative Shrinkage-Thresholding Algorithm for Linear Inverse
             Problems.
     * Solve the problem: `X = arg min_X F(X) = f(X) + lambda||X||_1` where:
        - `X`: variable, can be a matrix.
-       - `f(X)` is a smooth convex function with continuously differentiable 
-       with Lipschitz continuous gradient `L(f)` 
+       - `f(X)` is a smooth convex function with continuously differentiable
+       with Lipschitz continuous gradient `L(f)`
        (Lipschitz constant of the gradient of `f`).
     * Syntax: `[X, iter] = fista(grad, Xinit, L, lambda, opts, calc_F)` where:
        - INPUT:
             + `grad`: a _function_ calculating gradient of `f(X)` given `X`.
             + `Xinit`: initial guess.
             + `L`: the Lipschitz constant of the gradient of `f(X)`.
-            + `lambda`: a regularization parameter, can be either positive a 
+            + `lambda`: a regularization parameter, can be either positive a
                     scalar or a weighted matrix.
             + `opts`: a _structure_ variable describing the algorithm.
-              * `opts.max_iter`: maximum iterations of the algorithm. 
+              * `opts.max_iter`: maximum iterations of the algorithm.
                     Default `300`.
-              * `opts.tol`: a tolerance, the algorithm will stop if difference 
-                    between two successive `X` is smaller than this value. 
+              * `opts.tol`: a tolerance, the algorithm will stop if difference
+                    between two successive `X` is smaller than this value.
                     Default `1e-8`.
-              * `opts.show_progress`: showing `F(X)` after each iteration or 
-                    not. Default `false`. 
-            + `calc_F`: optional, a _function_ calculating value of `F` at `X` 
-                    via `feval(calc_F, X)`. 
+              * `opts.show_progress`: showing `F(X)` after each iteration or
+                    not. Default `false`.
+            + `calc_F`: optional, a _function_ calculating value of `F` at `X`
+                    via `feval(calc_F, X)`.
       - OUTPUT:
         + `X`: solution.
         + `iter`: number of iterations.
-    """ 
+    """
     Linv = 1/L
     lambdaLiv = alambda/L
     x_old = Xinit.copy()
     y_old = Xinit.copy()
-    t_old = 1 
+    t_old = 1
     it = 0
-    cost_old = float("inf") # the positive infinity number 
+    cost_old = float("inf") # the positive infinity number
     while it < opts.max_iter:
-        it += 1 
+        it += 1
         x_new = np.real(shrinkage(y_old - Linv*fn_grad(y_old), lambdaLiv))
         t_new = 0.5*(1 + math.sqrt(1 + 4*t_old**2))
         y_new = x_new + (t_old - 1)/t_new * (x_new - x_old)
-        e = norm1(x_new - x_old)/x_new.size 
+        e = norm1(x_new - x_old)/x_new.size
         if e < opts.tol:
             break;
         x_old = x_new.copy()
@@ -331,8 +334,8 @@ def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F, show_progress = False):
             # else:
             #     stt = 'No, check your code.'
             print 'iter = '+str(it)+', cost = %4.4f' % cost_new #\
-                # ', cost decreases? ',     stt 
-            cost_old = cost_new 
+                # ', cost decreases? ',     stt
+            cost_old = cost_new
         if not opts.verbose and show_progress and it%10 == 0:
             str0 = progress_str(it, opts.max_iter, 50)
             sys.stdout.write("\r%s %.2f%%" % (str0, (it*100.0)/opts.max_iter ))
@@ -344,13 +347,13 @@ def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F, show_progress = False):
 def lasso_fista(Y, D, Xinit, alambda, opts, show_progress = False):
     """
     * Syntax: `[X, iter] = lasso_fista(Y, D, Xinit, lambda, opts)`
-    * Solving a Lasso problem using FISTA [[11]](#fn_fista): 
-        `X, = arg min_X 0.5*||Y - DX||_F^2 + lambda||X||_1`. 
-        Note that `lambda` can be either a positive scalar or a matrix with 
+    * Solving a Lasso problem using FISTA [[11]](#fn_fista):
+        `X, = arg min_X 0.5*||Y - DX||_F^2 + lambda||X||_1`.
+        Note that `lambda` can be either a positive scalar or a matrix with
         positive elements.
       - INPUT:
         + `Y, D, lambda`: as in the problem.
-        + `Xinit`: Initial guess 
+        + `Xinit`: Initial guess
         + `opts`: options. See also [`fista`](#fista)
       - OUTPUT:
         + `X`: solution.
@@ -359,7 +362,7 @@ def lasso_fista(Y, D, Xinit, alambda, opts, show_progress = False):
       - _To see a toy example, un this function without inputs_
       - _Can be used for solving a Weighted Lasso problem_.
     """
-    # pass 
+    # pass
     if numel(Xinit) == 0:
         Xinit = np.zeros((D.shape[1], Y.shape[1]))
 
@@ -368,15 +371,15 @@ def lasso_fista(Y, D, Xinit, alambda, opts, show_progress = False):
 
     def calc_F(X):
         if isinstance(alambda, np.ndarray):
-            return calc_f(X) + alambda*abs(X) # element-wise multiplication 
+            return calc_f(X) + alambda*abs(X) # element-wise multiplication
         else:
             return calc_f(X) + alambda*norm1(X)
 
     DtD = np.dot(D.T, D)
     DtY = np.dot(D.T, Y)
     def grad(X):
-        g =  np.dot(DtD, X) - DtY 
-        return g 
+        g =  np.dot(DtD, X) - DtY
+        return g
     L = np.max(LA.eig(DtD)[0])
     (X, it) = fista(grad, Xinit, L, alambda, opts, calc_F, show_progress)
     return (X, it)
@@ -384,41 +387,41 @@ def lasso_fista(Y, D, Xinit, alambda, opts, show_progress = False):
 def lasso_fista_test():
     d = 300
     N = 700
-    k = 700 
+    k = 700
     Y = normc(np.random.rand(d, N))
     D = normc(np.random.rand(d, k))
     opts = Opts(test_mode = False, max_iter=50, show_cost = False)
-    alambda = 0.01 
+    alambda = 0.01
     lasso_fista(Y, D, np.array([]), alambda, opts)
 
 class Opts:
     """
-    parameters options. Store regularization parameters and algorithm stop 
+    parameters options. Store regularization parameters and algorithm stop
     criteria
-    """ 
+    """
     def __init__(self, tol = 1e-8, max_iter = 100, show_cost = False,\
         test_mode = False, lambda1 = None, lambda2 = None, lambda3 = None, \
         eta = None, check_grad = False, verbose = False):
-        self.tol        = tol 
-        self.max_iter   = max_iter 
-        self.show_cost  = show_cost 
+        self.tol        = tol
+        self.max_iter   = max_iter
+        self.show_cost  = show_cost
         self.test_mode  = test_mode
         self.check_grad = check_grad
-        self.lambda1    = lambda1 
-        self.lambda2    = lambda2 
-        self.lambda3    = lambda3 
+        self.lambda1    = lambda1
+        self.lambda2    = lambda2
+        self.lambda3    = lambda3
         self.verbose     = verbose
 
     def copy(self):
         opts = Opts()
-        opts.tol        = self.tol 
-        opts.max_iter   = self.max_iter 
-        opts.show_cost  = self.show_cost 
+        opts.tol        = self.tol
+        opts.max_iter   = self.max_iter
+        opts.show_cost  = self.show_cost
         opts.test_mode  = self.test_mode
         opts.check_grad = self.check_grad
-        opts.lambda1    = self.lambda1 
-        opts.lambda2    = self.lambda2 
-        opts.lambda3    = self.lambda3 
+        opts.lambda1    = self.lambda1
+        opts.lambda2    = self.lambda2
+        opts.lambda3    = self.lambda3
         return opts
 
 class MyForm:
@@ -430,12 +433,12 @@ class MyForm:
         [   N N ... N;
             N N ... N;
             N N ... N]
-    with `k` block rows and columns 
+    with `k` block rows and columns
     """
     def __init__(self, M, N, k):
         self.M = M.copy()
         self.N = N.copy()
-        self.k = k 
+        self.k = k
 
     def full_express(self):
         return np.kron(np.eye(self.k), self.M) + \
@@ -443,7 +446,7 @@ class MyForm:
 
     def mult(self, other):
         """
-        Multiplication with other MyForm matrix 
+        Multiplication with other MyForm matrix
         """
         A = np.dot(self.M, other.M)
         B = np.dot(self.M, other.N) + np.dot(self.N, other.M) + \
@@ -473,44 +476,44 @@ def MyForm_test():
     N = np.random.randint(10, size = (d, d))
     N = np.zeros_like(M)
     # M = np.zeros_like(N)
-    # print N 
+    # print N
     A = np.random.randint(10, size = (d, d))
     B = np.random.randint(10, size = (d, d))
 
     P = MyForm(M, N, k)
     Q = MyForm(A, B, k)
 
-    # Multiplication test 
+    # Multiplication test
     print '1. Multiplication test...',
     dif = LA.norm(np.dot(Q.full_express(),P.full_express()) - \
         Q.mult(P).full_express())
-    if dif < 1e-8: 
+    if dif < 1e-8:
         print 'diff =', dif, '\n   ...PASS'
     else:
         print 'diff =', dif, '\n   ...FAIL'
 
-    # Inverse test 
+    # Inverse test
     print '2. Inverse test ...',
     X = LA.inv(P.full_express())
     Y = P.inv()
     dif = LA.norm(X - Y.full_express())
-    if dif < 1e-8: 
+    if dif < 1e-8:
         print 'diff =', dif, '\n   ...PASS'
     else:
         print 'diff =', dif, '\n   ...FAIL'
 
-    # vector multiplication 
+    # vector multiplication
     print '3. Multiplication with vector...',
     x = np.random.randint(3, size =(d*k,))
-    # print x 
+    # print x
     # print P.full_express()
     y = np.dot(P.full_express(), x)
     z = P.mult_vec(x)
 
-    # print 'true\n', y 
-    # print 'computed\n', z 
-    dif = LA.norm(y - z) 
-    if dif < 1e-8: 
+    # print 'true\n', y
+    # print 'computed\n', z
+    dif = LA.norm(y - z)
+    if dif < 1e-8:
         print 'diff =', dif, '\n   ...PASS'
     else:
         print 'diff =', dif, '\n   ...FAIL'
@@ -520,9 +523,9 @@ def inv_IpXY(X, Y):
     """
     Calculating inv(I + XY)
     if X.shape[0] < X.shape[1], use regular inversion
-    else 
+    else
     using the equality:
-    inv(I + XY) = I - X*inv(I - YX)*Y 
+    inv(I + XY) = I - X*inv(I - YX)*Y
     """
     if X.shape[0] < X.shape[1]:
         return LA.inv(np.eye(X.shape[0]) + np.dot(X, Y))
@@ -534,29 +537,29 @@ def inv_IpXY_test():
     print ('----------------------------------------')
     print '`inv_IpXY` test ...',
     d1 = 200
-    d2 = 20 
+    d2 = 20
     X = np.random.rand(d1, d2)
     Y = np.random.rand(d2, d1)
-    
+
     t1 = time.time()
     M1 = LA.inv(np.eye(d1) + X.dot(Y))
     t2 = time.time()
 
     t3 = time.time()
     M2 = inv_IpXY(X, Y)
-    t4 = time.time() 
+    t4 = time.time()
 
     print '\nCompare running time:\n  regular: %5.2f' % (t2 - t1), \
         '(s)\n  fast   : %5.2f' % (t4 - t3), '(s)'
     dif = LA.norm(M1 - M2)
-    if dif < 1e-8: 
+    if dif < 1e-8:
         print 'diff =', dif, '\n   ...PASS'
     else:
         print 'diff =', dif, '\n   ...FAIL'
 
 def num_grad(func, X):
     """
-    Calculating gradient of a function `func(X)` where `X` is a matrix or 
+    Calculating gradient of a function `func(X)` where `X` is a matrix or
     vector
     """
     grad = np.zeros_like(X)
@@ -567,12 +570,12 @@ def num_grad(func, X):
             Xp = X.copy()
             Xm = X.copy()
             Xp[i,j] += eps
-            # print X 
+            # print X
             fp = func(Xp)
             Xm[i,j] -= eps
             fm = func(Xm)
             grad[i,j] = (fp - fm)/(2*eps)
-    return grad 
+    return grad
 
 def check_grad_test():
     """
@@ -585,18 +588,18 @@ def check_grad_test():
     k = 20
     Y = np.random.rand(d, n)
     D = np.random.rand(d, k)
-    X = np.random.rand(k, n) 
+    X = np.random.rand(k, n)
     def func(X):
-        return 0.5*normF2(Y - D.dot(X)) 
+        return 0.5*normF2(Y - D.dot(X))
 
     def grad_fnc(X):
-        return np.dot(np.dot(D.T, D), X) - D.T.dot(Y) 
+        return np.dot(np.dot(D.T, D), X) - D.T.dot(Y)
 
     def func2(X):
         return normF2(X)
 
     def grad_fnc2(X):
-        return 2*X 
+        return 2*X
 
     print 'PASS' if check_grad(func, grad_fnc, X) else 'FAIL'
     print 'PASS' if check_grad(func2, grad_fnc2, X) else 'FAIL'
@@ -604,7 +607,7 @@ def check_grad_test():
 def check_grad(func, grad, X):
     print 'Checking grad...',
     grad1 = grad(X)
-    grad2 = num_grad(func, X) 
+    grad2 = num_grad(func, X)
 
     dif =  LA.norm(grad1 - grad2)
     if dif < 1e-5:
@@ -617,7 +620,7 @@ def randperm(n):
     return np.random.permutation(xrange(n))
 
 def randperm_test():
-    n = 10 
+    n = 10
     print randperm(n)
 
 def get_range(arange, c):
@@ -625,44 +628,44 @@ def get_range(arange, c):
 
 def pickDfromY(Y, Y_range, D_range):
     """
-    randomly pick k_c samples from Y_c 
-    """ 
-    C = Y_range.size - 1 
+    randomly pick k_c samples from Y_c
+    """
+    C = Y_range.size - 1
     D = np.zeros((Y.shape[0], D_range[-1]))
     for c in xrange(C):
-        Yc = get_block_col(Y, c, Y_range) 
+        Yc = get_block_col(Y, c, Y_range)
         N_c = Yc.shape[1]
-        # print Yc 
+        # print Yc
         ids = randperm(N_c)
         range_Dc = get_range(D_range, c)
         kc = D_range[c+1] - D_range[c]
         D[:, D_range[c]:D_range[c+1]] = Yc[:, np.sort(ids[:kc])]
-    return D 
+    return D
 
 def pickDfromY_test():
     print ('----------------------------------')
     print 'Test `pickDfromY`......'
-    d = 2 
-    n = 10 
+    d = 2
+    n = 10
     Y = np.random.randint(10, size=(d, n))
-    print Y 
+    print Y
     Y_range = np.array([0, 4, 10])
     D_range = np.array([0, 2, 5])
     D = pickDfromY(Y, Y_range, D_range)
-    # print Y_range 
-    print D 
+    # print Y_range
+    print D
 
 def myload(filename):
-    # import testPickle 
+    # import testPickle
     # A = sio.loadmat(filename)
     # with open(filename, 'rb') as input_file:
     #     A = cPickle.load(input_file)
     # A = pickle.load(input_file)
     # A = pickle.load( open(filename, "rb" ) )
-    
+
     print filename
     A = sio.loadmat(filename)
-    return A 
+    return A
     # return testPickle.pickle_load(filename)
     # print A['label_test']
 
@@ -672,12 +675,12 @@ def SRC_pred(Y, D, D_range, lambda1, opts, show_progress = False):
     * Syntax: `[pred, X] = SRC_pred(Y, D, D_range, lambda1, opts)`
       - INPUT:
         + `Y`: test samples.
-        + `D`: the total dictionary. `D = [D_1, D_2, ..., D_C]` with `D_c` 
+        + `D`: the total dictionary. `D = [D_1, D_2, ..., D_C]` with `D_c`
             being the _c-th_ class-specific dictionary.
-        + `D_range`: range of class-specific dictionaries in `D`. 
+        + `D_range`: range of class-specific dictionaries in `D`.
         + `opts`: options.
           * `opts.lambda`: `lambda` for the Lasso problem.
-          * `opts.max_iter`: maximum iterations of fista algorithm. 
+          * `opts.max_iter`: maximum iterations of fista algorithm.
           * others.
       - OUTPUT:
         + `pred`: predicted labels of test samples.
@@ -690,7 +693,7 @@ def SRC_pred(Y, D, D_range, lambda1, opts, show_progress = False):
             (http://www.personal.psu.edu/thv102/)
     -----------------------------------------------
     """
-    C = D_range.size - 1 
+    C = D_range.size - 1
     pred = np.zeros((1, Y.shape[1]))
 
     print "sparse coding...",
@@ -699,7 +702,7 @@ def SRC_pred(Y, D, D_range, lambda1, opts, show_progress = False):
     print "done"
 
     E = np.zeros((C, Y.shape[1]))
-    
+
     for i in xrange(C):
         Xi = get_block_row(X, i, D_range)
         Di = get_block_col(D, i, D_range)
@@ -708,7 +711,7 @@ def SRC_pred(Y, D, D_range, lambda1, opts, show_progress = False):
 
     pred = np.argmin(E, axis = 0) + 1
 
-    return vec(pred) 
+    return vec(pred)
 
 def pickTrainTest(dataset, N_train_c):
     data_fn = os.path.join('data', dataset + '.pickle')
@@ -718,25 +721,25 @@ def pickTrainTest(dataset, N_train_c):
     d = Y.shape[0]
     if 'Y_range' not in Vars:
         Y_range = label_to_range(Vars['label'].flatten(1)).astype(int)
-        
+
     else:
         Y_range = Vars['Y_range'].flatten(1).astype(int)
 
-    C = Y_range.size - 1 
+    C = Y_range.size - 1
     N_total     = Y_range[-1]
-    N_train     = C*N_train_c 
-    N_test      = N_total - N_train 
-    
+    N_train     = C*N_train_c
+    N_test      = N_total - N_train
+
     Y_train     = np.zeros((d, N_train))
     Y_test      = np.zeros((d, N_test))
     label_train = np.zeros((1, N_train))
-    label_test  = np.zeros((1, N_test))    
-    cur_train   = 0 
-    cur_test    = 0 
+    label_test  = np.zeros((1, N_test))
+    cur_train   = 0
+    cur_test    = 0
     for c in xrange(C):
-        Yc        = get_block_col(Y, c, Y_range) 
-        N_total_c = Yc.shape[1] 
-        N_test_c  = N_total_c - N_train_c 
+        Yc        = get_block_col(Y, c, Y_range)
+        N_total_c = Yc.shape[1]
+        N_test_c  = N_total_c - N_train_c
         label_train[:, cur_train: cur_train + N_train_c] = \
             (c+1)*np.ones((1, N_train_c))
         label_test[:, cur_test:cur_test + N_test_c] = (c+1)*np.ones((1, N_test_c))
@@ -749,42 +752,42 @@ def pickTrainTest(dataset, N_train_c):
         Y_test[:, cur_test: cur_test + N_test_c] = \
             Yc[:, np.sort(ids[N_train_c:])]
 
-        cur_train += N_train_c 
-        cur_test += N_test_c 
-    
+        cur_train += N_train_c
+        cur_test += N_test_c
+
     Y_train = normc(Y_train)
     Y_test  = normc(Y_test)
     return (Y_train, label_train, Y_test, label_test)
 
 def range_reduce(D_range, bad_ids):
-    C = D_range.size - 1 
+    C = D_range.size - 1
     for c in xrange(C):
         cumk = D_range[c+1]
-        e = cumk - np.nonzero(bad_ids < cumk)[0].size 
-        D_range[c+1] = e 
+        e = cumk - np.nonzero(bad_ids < cumk)[0].size
+        D_range[c+1] = e
 
 def range_reduce_test():
     D_range = np.array([0, 4, 8, 13])
     bad_ids = np.array([1, 5, 7, 9, 10])
     print D_range, bad_ids
     range_reduce(D_range, bad_ids)
-    print D_range 
+    print D_range
 
 # range_reduce_test()
 def build_mean_vector(X, Y_range):
     """
     M = build_mean_vector(X, Y_range)
     suppose X = [X_1 X_2 ... X_C]
-    return M = [m1, m2, ..., M_C] 
+    return M = [m1, m2, ..., M_C]
     where mi = mean(X_i)
     """
-    C = Y_range.size -1 
+    C = Y_range.size -1
     # import pdb; pdb.set_trace()  # breakpoint 750a8d83 //
-    M = np.zeros((X.shape[0], C)) 
+    M = np.zeros((X.shape[0], C))
     for c in xrange(C):
         Xc = get_block_col(X, c, Y_range)
         M[:, c] = np.mean(Xc, axis=1)
-    return M 
+    return M
 
 def train_test_split(dataset, N_train):
     if dataset == 'myARgender':
@@ -832,13 +835,13 @@ def train_test_split(dataset, N_train):
         Y_train = normc(Y_train)
         Y_test  = normc(Y_test)
 
-    else: 
+    else:
         Y_train, label_train, Y_test, label_test = \
             pickTrainTest(dataset, N_train)
     return (dataset, Y_train, Y_test, \
             label_train.astype(int), label_test.astype(int))
 
-def SRC_top(dataset, N_train, lambda1, verbose = False, show_progress = True):
+def SRC_top(dataset, N_train, lambda1, verbose = False, show_progress = False):
     print "===================SRC=================="
     dataset, Y_train, Y_test, label_train, label_test = \
         train_test_split(dataset, N_train)
@@ -847,19 +850,19 @@ def SRC_top(dataset, N_train, lambda1, verbose = False, show_progress = True):
     train_range = label_to_range(label_train)
 
     pred = SRC_pred(Y_test, Y_train, train_range, lambda1, opts, show_progress)
-    # print pred 
+    # print pred
     acc = calc_acc(pred, label_test)
-    print 'Overall accuracy: %.2f %%' % (acc*100) 
+    print 'Overall accuracy: %.2f %%' % (acc*100)
     print ''
 
-    return acc 
+    return acc
 
 def build_mean_matrix(X, cols = None):
     if X.shape[1] == 0:
         return X
     m = np.mean(X, axis = 1)
-    if cols == None: 
-        return repmat(m, 1, X.shape[1]) 
+    if cols == None:
+        return repmat(m, 1, X.shape[1])
     else:
         return np.tile(m, 1, cols)
 
@@ -867,8 +870,8 @@ def build_mean_matrix_test():
     print '----------------------------------'
     print '`build_mean_matrix` test: '
     X = np.random.randint(5, size = (2, 3))
-    M = build_mean_matrix(X) 
-    print X , '\n', M 
+    M = build_mean_matrix(X)
+    print X , '\n', M
 
 # build_mean_matrix_test()
 
@@ -898,36 +901,36 @@ def buildMhat(M, range_row, range_col):
             http://www.personal.psu.edu/thv102/
     ---------------------------------------------
     """
-    C = range_row.size - 1 
+    C = range_row.size - 1
     M2 = M.copy()
     for c in xrange(C):
-        M2[range_row[c]: range_row[c+1], range_col[c]: range_col[c+1]] *= 2 
-    return M2  
+        M2[range_row[c]: range_row[c+1], range_col[c]: range_col[c+1]] *= 2
+    return M2
 
 def buildMhat_test():
     print '------------------------------------------'
     print '`buildMhat` test: '
     d1 = 2
-    d2 = 3 
-    C = 2 
+    d2 = 3
+    C = 2
     range_row = d1*np.arange(C+1)
-    range_col = d2*np.arange(C+1) 
+    range_col = d2*np.arange(C+1)
     M = np.random.randint(3, size = (C*d1, C*d2))
-    print 'M =\n', M 
+    print 'M =\n', M
     print 'buildMhat = \n', buildMhat(M, range_row, range_col)
 
 def buildM_2Mbar(X, Y_range, lambda2):
     """
-    """ 
-    MM = np.zeros_like(X) 
-    C = Y_range.size - 1 
+    """
+    MM = np.zeros_like(X)
+    C = Y_range.size - 1
     m = np.mean(X, axis = 1)
     for c in xrange(C):
         Xc = get_block_col(X, c, Y_range)
-        mc = np.mean(Xc, axis = 1) 
+        mc = np.mean(Xc, axis = 1)
         MM[:, Y_range[c]: Y_range[c+1]] = \
             repmat(lambda2*(m - 2*mc), 1, Y_range[c+1] - Y_range[c])
-    return MM 
+    return MM
 
 def buildMean(X):
     return build_mean_matrix(X)
@@ -946,7 +949,7 @@ def range_delete_ids(a_range, ids):
     n = numel(a_range)
     m = numel(ids)
     a = np.zeros_like(a_range)
-    j = 1 
+    j = 1
     while j < n-1:
         for i in xrange(n):
             while a_range[j] < ids[i]:
@@ -978,10 +981,10 @@ def time_estimate(t):
 def erase_diagonal(A):
     if A.shape[0] != A.shape[1]:
         print 'The input matrix is not square!'
-        return 
+        return
     B = A.copy()
     np.fill_diagonal(B, 0)
-    return B 
+    return B
 
 def erase_diagonal_blocks(A, row_range, col_range):
     if numel(row_range) != numel(col_range):
@@ -990,13 +993,13 @@ def erase_diagonal_blocks(A, row_range, col_range):
     B = A.copy()
     for c in xrange(C):
         B[row_range[c]: row_range[c+1], col_range[c]: col_range[c+1]] = 0
-    return B 
+    return B
 
 def inv_IpXY(X, Y):
     """
     Calculate the inverse of matrix A = I + XY.
     if X is a fat matrix (number of columns >> number of rows), then use inv(I + X*Y)
-    else: use equation: (I + XY)^(-1) = I - Y*(I + Y*X)^(-1)*X 
+    else: use equation: (I + XY)^(-1) = I - Y*(I + Y*X)^(-1)*X
     -----------------------------------------------
     Author: Tiep Vu, thv102@psu.edu, 4/12/2016
             (http://www.personal.psu.edu/thv102/)
@@ -1008,7 +1011,7 @@ def inv_IpXY(X, Y):
         M = eye(d1) - np.dot(np.dot(X, LA.inv(eye(d2) + np.dot(Y, X))), Y)
     else:
         M = LA.inv(eye(d1) + np.dot(X, Y))
-    return M 
+    return M
 def inv_IpXY_test():
     d1 = 1000
     d2 = 10
@@ -1017,12 +1020,12 @@ def inv_IpXY_test():
     t1 = time.time()
     A = LA.inv(eye(d1)+ np.dot(X,Y))
     t2 = time.time()
-    print 't1 = ', t2 - t1 
+    print 't1 = ', t2 - t1
     #
     t1 = time.time()
     B = inv_IpXY(X, Y)
     t2 = time.time()
-    print 't2 = ', t2 - t1 
+    print 't2 = ', t2 - t1
     print 'diff = ', normF2(A - B)
 
 # inv_IpXY_test()
@@ -1041,7 +1044,7 @@ def inv_IpXY_test():
     # # nuclearnorm_test()
     # # shrinkage_test()
     # # shrinkage_rank_test()
-    # MyForm_test() 
+    # MyForm_test()
     # inv_IpXY_test()
     # check_grad_test()
     # randperm_test()
@@ -1051,7 +1054,7 @@ def inv_IpXY_test():
     # t1 = time.time()
     # # acc = SRC_top('myARreduce', 7, 0.001)
     # t2 = time.time();
-    # print acc, t2 - t1 
+    # print acc, t2 - t1
     # lasso_fista_test()
     # print 'hello'
     # ODL_test()
@@ -1063,28 +1066,28 @@ def inv_IpXY_test():
     # repmat_test()
     # build_mean_matrix_test()
     # opts = Opts()
-    # opts2 = opts 
-    # print opts.max_iter 
+    # opts2 = opts
+    # print opts.max_iter
     # opts2.max_iter = 0
-    # print opts.max_iter 
+    # print opts.max_iter
 
 def progress_str(cur_val, max_val, total_point=50):
     p = int(math.ceil(float(cur_val)*total_point/ max_val))
-    return '|' + p*'#'+ (total_point - p)*'.'+ '|' 
+    return '|' + p*'#'+ (total_point - p)*'.'+ '|'
 
 def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
     """
     This function try to solve the following problem:
     [D] = argmin_D 0.5*|| Y - DX||_F^2 + lambdaD ||D||_*
-    s.t. ||d_i||_2^2 <= 1, for all i 
+    s.t. ||d_i||_2^2 <= 1, for all i
     using ADMM:
-    INPUT: 
-        Y: Data 
-        Dinit: intitial D 
-        X: sparse code  
-        lambdaD: regularization term 
-    OUTPUT: 
-        D: 
+    INPUT:
+        Y: Data
+        Dinit: intitial D
+        X: sparse code
+        lambdaD: regularization term
+    OUTPUT:
+        D:
     Created: Tiep Vu 6/29/2015 2:05:28 PM
     ------------------------
     Choose a rho.
@@ -1092,17 +1095,17 @@ def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
     ADMM: D,J = argmin_DJ 0.5*||Y - DX||_F^2 + lambdaD||J||_*
     s.t ||d_i||_2^2 <= 1 and J = D
     Alternatively solving:
-    (1): D^{k+1} = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U^k||_F^2 
+    (1): D^{k+1} = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U^k||_F^2
         s.t. ||d_i||_2^2 <= 1
-        this problem can be soved using the update dictionary stage in 
+        this problem can be soved using the update dictionary stage in
             Online Dictionary Learning method
     (2): J^{k+1} = argminJ lambdaD||J||_* + rho/2||J - D^{k+1} + U^k||
         Solution: shrinkage_rank(D^{k+1} - U^k, lambdaD/rho)
     (3): Update U: U^{k+1} = U^k + J^{k+1} - D^{k+1}
      Stoping cretia:
-    ||r^k||_F^2 <= tol, ||s^k||_F^2 <= tol 
-    r^k = J^k - D^k 
-    s^k = rho(J^{k+1} - J^k) 
+    ||r^k||_F^2 <= tol, ||s^k||_F^2 <= tol
+    r^k = J^k - D^k
+    s^k = rho(J^{k+1} - J^k)
     ---------------------------------------------
     Author: Tiep Vu, thv102@psu.edu, 04/22/2016
             http://www.personal.psu.edu/thv102/
@@ -1110,20 +1113,20 @@ def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
     """
     YXt = np.dot(Y, X.T)
     XXt = np.dot(X, X.T)
-    rho = 0.25 
-    D_old = Dinit 
-    J_old = Dinit 
+    rho = 0.25
+    D_old = Dinit
+    J_old = Dinit
     U_old = np.zeros_like(Dinit)
-    it = 0 
+    it = 0
     I = np.eye(XXt.shape[0])
-    tau = 2 
-    mu = 10.0 
-    optsD = opts 
+    tau = 2
+    mu = 10.0
+    optsD = opts
     optsD.max_iter = 50
     while it < opts.max_iter:
-        it += 1 
+        it += 1
         ## =========update D ================================
-        # D = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U||_F^2 
+        # D = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U||_F^2
         # s.t. ||d_i||_2^2 <= 1
         E = YXt + rho*(J_old + U_old)
         F = XXt + rho*I
@@ -1134,12 +1137,12 @@ def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
         J_new = np.real(shrinkage_rank(D_new - U_old, lambdaD/rho))
          ## ========= update U ==============================
         U_new = U_old + J_new - D_new
-        
+
         ## ========= check stop ==============================
         r = J_new - D_new
         s = rho*(J_new - J_old)
         r_eps = LA.norm(r, 'fro')
-        s_eps = LA.norm(s, 'fro')   
+        s_eps = LA.norm(s, 'fro')
         if r_eps < opts.tol and s_eps < opts.tol:
             break
         D_old = D_new

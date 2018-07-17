@@ -9,10 +9,10 @@ def ODL_cost(Y, D, X, lambda1):
 
 def ODL_updateD(D, E, F, opts):
 	"""
-	* The main algorithm in ODL. 
+	* The main algorithm in ODL.
 	* Solving the optimization problem:
 	  `D = arg min_D -2trace(E'*D) + trace(D*F*D')` subject to: `||d_i||_2 <= 1`,
-	     where `F` is a positive semidefinite matrix. 
+	     where `F` is a positive semidefinite matrix.
 	* Syntax `[D, iter] = ODL_updateD(D, E, F, opts)`
 	  - INPUT: 
 	    + `D, E, F` as in the above problem.
