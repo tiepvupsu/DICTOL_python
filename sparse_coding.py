@@ -8,8 +8,8 @@ class Fista(object):
     def __init__(self):
         pass
 
-    def solve(self, Xinit = None, iterations = 100, tol = 1e-8, verbose = False):
-        if not Xinit:
+    def solve2(self, Xinit = None, iterations = 100, tol = 1e-8, verbose = False):
+        if Xinit is None:
             Xinit = np.zeros((self.D.shape[1], self.Y.shape[1]))
         Linv = 1/self.L
         lambdaLiv = self.lamb/self.L
@@ -31,8 +31,33 @@ class Fista(object):
             if verbose:
                 print('iter \t%d/%d, loss \t %4.4f'%(it + 1, iterations, self.lossF(x_new)))
         return x_new
-        pass
         # self.DtY =
+
+    def solve(self, Y, Xinit = None, iterations = 100, tol = 1e-8, verbose = False):
+        self.fit(Y)
+        if Xinit is None:
+            Xinit = np.zeros((self.D.shape[1], self.Y.shape[1]))
+        Linv = 1/self.L
+        lambdaLiv = self.lamb/self.L
+        x_old = Xinit.copy()
+        y_old = Xinit.copy()
+        t_old = 1
+        it = 0
+        # cost_old = float("inf")
+        for it in range(iterations):
+            x_new = np.real(utils.shrinkage(y_old - Linv*self._grad(y_old), lambdaLiv))
+            t_new = .5*(1 + math.sqrt(1 + 4*t_old**2))
+            y_new = x_new + (t_old - 1)/t_new * (x_new - x_old)
+            e = utils.norm1(x_new - x_old)/x_new.size
+            if e < tol:
+                break
+            x_old = x_new.copy()
+            t_old = t_new
+            y_old = y_new.copy()
+            if verbose:
+                print('iter \t%d/%d, loss \t %4.4f'%(it + 1, iterations, self.lossF(x_new)))
+        return x_new
+
 
 class Lasso(Fista):
     """
@@ -73,8 +98,8 @@ def _test_lasso():
     l.fit(Y)
     X = l.solve(verbose = True)
     print(X)
-    l.fit(Y1)
-    X = l.solve(verbose = True)
+    X = Lasso(D).solve2(Y1, verbose = True)
+    X = Lasso(D).solve2(Y1, Xinit = X, verbose = True)
     print(X)
 
    # X = l.solve()
