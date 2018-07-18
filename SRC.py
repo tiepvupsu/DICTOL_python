@@ -35,7 +35,7 @@ def test_src():
     N_train = 10
     dataset, Y_train, Y_test, label_train, label_test = \
            utils.train_test_split(dataset, N_train)
-    clf = SRC(lamb = 0.001)
+    clf = SRC(lamb = 0.01)
     clf.fit(Y_train, label_train)
     clf.evaluate(Y_test, label_test)
 

@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 from numpy import linalg as LA
 
 def repmat(A, rows, cols):
@@ -15,22 +15,22 @@ def repmat_test():
     print 'Test `repmat`:'
     a = np.array([1, 2])
     rows = 2
-    cols = 3 
+    cols = 3
     A = repmat(a, rows, cols)
-    print 'a = ', a 
-    print 'rows = %d,' %rows, 'cols = %d' %cols 
-    print A 
+    print 'a = ', a
+    print 'rows = %d,' %rows, 'cols = %d' %cols
+    print A
 
 def numel(A):
     """
-    return number of elements of a numpy array 
+    return number of elements of a numpy array
     """
-    return A.size 
+    return A.size
 
 def vec(A):
     """
     * Syntax: `a = vec(A)`
-    * Vectorization of a matrix. This function is a built-in function in some 
+    * Vectorization of a matrix. This function is a built-in function in some
     recent MATLAB version.
     """
     # pass
