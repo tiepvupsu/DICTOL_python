@@ -15,7 +15,7 @@ class DLSI(object):
         self.updateD_iters = updateD_iters
         self.updateX_iters = updateX_iters
 
-    def fit(self, Y, label_train, k, iterations = 100, verbose = False):
+    def fit(self, Y, label_train, k, iterations = 100, verbose = False, show_after = 10):
         self.Y = Y
         del Y
         self.Y_range = utils.label_to_range(label_train)
@@ -27,6 +27,8 @@ class DLSI(object):
             n_rows = self.D_range[c+1] - self.D_range[c]
             n_cols = self.Y_range[c+1] - self.Y_range[c]
             self.X.append(np.zeros((n_rows, n_cols)))
+        if verbose:
+            print('Initializing ... ')
 
         self._initialize()
         if verbose:
@@ -37,8 +39,8 @@ class DLSI(object):
             self._updateX()
             # update D
             self._updateD()
-            if verbose:
-                print('iter \t %d/%d \t\t loss \t %.4f'%(it, iterations, self.loss()))
+            if verbose and (it == 0 or (it+1)%show_after == 0):
+                print('iter \t %3d/%d \t loss \t %.4f'%(it + 1, iterations, self.loss()))
 
     def _getYc(self, c):
         return utils.get_block_col(self.Y, c, self.Y_range)
@@ -56,12 +58,13 @@ class DLSI(object):
             self.D[:, self.D_range[c]: self.D_range[c+1]] = clf.D
             self.X[c] = clf.X
 
+    def _updateXc(self, c):
+        lasso = sparse_coding.Lasso(self._getDc(c), self.lambd)
+        self.X[c] = lasso.solve(self._getYc(c), Xinit = self.X[c])
+
     def _updateX(self):
         for c in range(self.nclass):
-            lasso = sparse_coding.Lasso(self._getDc(c), self.lambd)
-            # import pdb
-            # pdb.set_trace()
-            self.X[c] = lasso.solve(self._getYc(c), Xinit = self.X[c])
+            self._updateXc(c)
 
     def _updateD(self):
         for c in range(self.nclass):
@@ -132,23 +135,32 @@ class DLSI(object):
                 utils.erase_diagonal_blocks(np.dot(self.D.T, self.D), self.D_range, self.D_range))
         return cost
 
-    def predict(self, Y_test):
-        pass
+    def predict(self, Y):
+        E = np.zeros((self.nclass, Y.shape[1]))
+        for c in range(self.nclass):
+            Dc = self._getDc(c)
+            lasso = sparse_coding.Lasso(Dc, self.lambd)
+            Xc = lasso.solve(Y)
+            R1 = Y - np.dot(Dc, Xc)
+            E[c, :] = 0.5*(R1*R1).sum(axis = 0) + self.lambd*abs(Xc).sum(axis = 0)
+        return np.argmin(E, axis = 0) + 1
 
     def evaluate(self, Y_test, label_test, metrics = ['accuracy']):
-        pass
+        print('evaluating...')
+        pred = self.predict(Y_test)
+        acc = np.sum(pred == label_test)/float(utils.numel(label_test))
+        print('accuracy = %.2f'%(100*acc))
+        return acc
 
 
 def _test_unit():
     dataset = 'myYaleB'
-    N_train = 10
+    N_train = 15
     dataset, Y_train, Y_test, label_train, label_test = \
            utils.train_test_split(dataset, N_train)
-    clf = DLSI(lambd = 0.01)
-    clf.fit(Y_train, label_train, k = 5, iterations = 100, verbose = True)
-    # clf.evaluate(Y_test, label_test)
-
-
+    clf = DLSI(lambd = 0.001, eta = 0.01)
+    clf.fit(Y_train, label_train, k = 10, iterations = 100, verbose = True)
+    clf.evaluate(Y_test, label_test)
 
 if __name__ == '__main__':
     _test_unit()
