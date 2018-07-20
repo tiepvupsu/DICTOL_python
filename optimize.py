@@ -104,17 +104,59 @@ def DLSI_updateD(D, E, F, A, lambda1, verbose = False, iterations = 100):
 
     return D
 
+def num_grad(func, X):
+    """
+    Calculating gradient of a function `func(X)` where `X` is a matrix or
+    vector
+    """
+    grad = np.zeros_like(X)
+    eps = 1e-4
+    for i in xrange(X.shape[0]):
+        for j in xrange(X.shape[1]):
+            # print X, '\n'
+            Xp = X.copy()
+            Xm = X.copy()
+            Xp[i,j] += eps
+            # print X
+            fp = func(Xp)
+            Xm[i,j] -= eps
+            fm = func(Xm)
+            grad[i,j] = (fp - fm)/(2*eps)
+    return grad
 
+def check_grad(func, grad, X):
+    print('Checking grad...',)
+    grad1 = grad(X)
+    grad2 = num_grad(func, X)
+
+    dif =  LA.norm(grad1 - grad2)
+    if dif < 1e-5:
+        print('Different = %f' %dif, 'PASS')
+    else:
+        print('Different = %f' %dif, 'FAIL')
+    return dif < 1e-5
+
+# class CheckGrad(object):
+#     def __init__(self):
+#         self._grad = None
+#         self._calc_f = None
+
+#     def
 class Fista(object):
     def __init__(self):
-        pass
+        """
+        subclasses are required to have three following functions and lambd
+        """
+        self._grad = None
+        self._calc_f = None
+        self.lossF = None
+        self.lambd = None
 
-    def solve(self, Y, Xinit = None, iterations = 100, tol = 1e-8, verbose = False):
-        self.fit(Y)
+    def solve(self, Xinit = None, iterations = 100, tol = 1e-8, verbose = False):
         if Xinit is None:
             Xinit = np.zeros((self.D.shape[1], self.Y.shape[1]))
         Linv = 1/self.L
-        lambdaLiv = self.lamb/self.L
+        lambdaLiv = self.lambd/self.L
         x_old = Xinit.copy()
         y_old = Xinit.copy()
         t_old = 1
@@ -134,6 +176,12 @@ class Fista(object):
                 print('iter \t%d/%d, loss \t %4.4f'%(it + 1, iterations, self.lossF(x_new)))
         return x_new
 
+    def check_grad(self, X):
+        grad1 = self._grad(X)
+        grad2 = num_grad(self._calc_f, X)
+        dif = utils.norm1(grad1 - grad2)/grad1.size
+        print('grad difference = %.7f'%dif)
+
 
 class Lasso(Fista):
     """
@@ -142,9 +190,9 @@ class Lasso(Fista):
         = argmin_X f(X) + lambd||X||_1
         F(x) = f(X) + lamb||X||_1
     """
-    def __init__(self, D, lamb = .1):
+    def __init__(self, D, lambd = .1):
         self.D = D
-        self.lamb = lamb
+        self.lambd = lambd
         self.DtD = np.dot(self.D.T, self.D)
         self.Y = None
         self.DtY = None
@@ -161,7 +209,7 @@ class Lasso(Fista):
         return 0.5*utils.normF2(self.Y - np.dot(self.D, X))
 
     def lossF(self, X):
-        return self._calc_f(X) + self.lamb*utils.norm1(X)
+        return self._calc_f(X) + self.lambd*utils.norm1(X)
 
 
 def _test_lasso():
@@ -170,8 +218,9 @@ def _test_lasso():
     k = 7
     Y = utils.normc(np.random.rand(d, N))
     D = utils.normc(np.random.rand(d, k))
-    l = Lasso(D, lamb = .01)
+    l = Lasso(D, lambd = .01)
     l.fit(Y)
+    l.check_grad(np.random.randn(D.shape[1], Y.shape[1]))
     X = l.solve(verbose = True)
     print(X)
 

@@ -1,6 +1,5 @@
 from __future__ import print_function
 import utils, optimize
-import sparse_coding
 import numpy as np
 # from numpy import linalg as LA
 
@@ -9,8 +8,8 @@ class ODL(object):
     Solving the optimization problem:
         (D, X) = arg min_{D, X} 0.5||Y - DX||_F^2 + lamb||X||_1
     """
-    def __init__(self, lamb = 0.001, updateD_iters = 100, updateX_iters = 100):
-        self.lamb = lamb
+    def __init__(self, lambd = 0.001, updateD_iters = 100, updateX_iters = 100):
+        self.lambd = lambd
         self.Y = None
         self.D = None
         self.X = None
@@ -33,8 +32,9 @@ class ODL(object):
         self.X = np.zeros((self.D.shape[1], self.Y.shape[1]))
         for it in range(iterations):
             # update X
-            self.X = sparse_coding.Lasso(self.D, self.lamb).solve(self.Y, \
-                    iterations = self.updateX_iters)
+            lasso = optimize.Lasso(self.D, self.lambd)
+            lasso.fit(self.Y)
+            self.X = lasso.solve(self.X)
             # update D
             F = np.dot(self.X, self.X.T)
             E = np.dot(self.Y, self.X.T)
@@ -44,7 +44,7 @@ class ODL(object):
 
     def loss(self):
         l = 0.5*utils.normF2(self.Y - np.dot(self.D, self.X)) + \
-                self.lamb*utils.norm1(self.X)
+                self.lambd*utils.norm1(self.X)
         return l
 
 
@@ -53,8 +53,8 @@ def _test_unit():
     N = 500
     k = 200
     Y = utils.normc(np.random.randn(d, N))
-    clf = ODL(lamb = 0.01)
-    clf.fit(Y, k, verbose = True, iterations = 300)
+    clf = ODL(lambd = 0.01)
+    clf.fit(Y, k, verbose = True, iterations = 100)
     # print(clf.X)
 
 if __name__ == '__main__':

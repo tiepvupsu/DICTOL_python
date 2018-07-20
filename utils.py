@@ -557,65 +557,6 @@ def inv_IpXY_test():
     else:
         print 'diff =', dif, '\n   ...FAIL'
 
-def num_grad(func, X):
-    """
-    Calculating gradient of a function `func(X)` where `X` is a matrix or
-    vector
-    """
-    grad = np.zeros_like(X)
-    eps = 1e-4
-    for i in xrange(X.shape[0]):
-        for j in xrange(X.shape[1]):
-            # print X, '\n'
-            Xp = X.copy()
-            Xm = X.copy()
-            Xp[i,j] += eps
-            # print X
-            fp = func(Xp)
-            Xm[i,j] -= eps
-            fm = func(Xm)
-            grad[i,j] = (fp - fm)/(2*eps)
-    return grad
-
-def check_grad_test():
-    """
-    Test 'num_grad' and `check_grad`
-    """
-    print '----------------------------------'
-    print 'Test num_grad ...',
-    d = 20
-    n = 20
-    k = 20
-    Y = np.random.rand(d, n)
-    D = np.random.rand(d, k)
-    X = np.random.rand(k, n)
-    def func(X):
-        return 0.5*normF2(Y - D.dot(X))
-
-    def grad_fnc(X):
-        return np.dot(np.dot(D.T, D), X) - D.T.dot(Y)
-
-    def func2(X):
-        return normF2(X)
-
-    def grad_fnc2(X):
-        return 2*X
-
-    print 'PASS' if check_grad(func, grad_fnc, X) else 'FAIL'
-    print 'PASS' if check_grad(func2, grad_fnc2, X) else 'FAIL'
-
-def check_grad(func, grad, X):
-    print 'Checking grad...',
-    grad1 = grad(X)
-    grad2 = num_grad(func, X)
-
-    dif =  LA.norm(grad1 - grad2)
-    if dif < 1e-5:
-        print 'Different = %f' %dif, 'PASS'
-    else:
-        print 'Different = %f' %dif, 'FAIL'
-    return dif < 1e-5
-
 def randperm(n):
     return np.random.permutation(xrange(n))
 
@@ -987,9 +928,9 @@ def erase_diagonal(A):
     return B
 
 def erase_diagonal_blocks(A, row_range, col_range):
-    if numel(row_range) != numel(col_range):
+    if len(row_range) != len(col_range):
         print 'no. of column blocks != no. of row blocks!!'
-    C = numel(row_range) - 1
+    C = len(row_range) - 1
     B = A.copy()
     for c in xrange(C):
         B[row_range[c]: row_range[c+1], col_range[c]: col_range[c+1]] = 0

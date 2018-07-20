@@ -1,10 +1,10 @@
 from __future__ import print_function
 import utils, optimize
-import sparse_coding
 import numpy as np
 from ODL import ODL
+# import pdb
 
-class UpdateXc(sparse_coding.Fista):
+class UpdateXc(optimize.Fista):
     """
     Update Xc in COPAR (page 189-190 COPAR)
     see COPAR paper:
@@ -19,7 +19,7 @@ class UpdateXc(sparse_coding.Fista):
     """
     def __init__(self, D, D_range_ext, Y, Y_range, lambd, iterations = 100):
         self.D = D
-        self.lamb = lamb
+        self.lambd = lambd
         self.DtD = np.dot(self.D.T, self.D)
         self.Y =Y
         self.Y_range = Y_range
@@ -27,6 +27,7 @@ class UpdateXc(sparse_coding.Fista):
         self.DtY = np.dot(D.T, Y)
         self.DCp1 = utils.get_block_col(D, self.nclass, D_range_ext)
         self.DCp1tDCp1 = np.dot(self.DCp1.T, self.DCp1)
+        self.D_range_ext = D_range_ext
         self.k0 = D_range_ext[-1] - D_range_ext[-2]
         if self.k0 > 0:
             self.L = utils.max_eig(self.DtD) + utils.max_eig(self.DCp1tDCp1)
@@ -34,7 +35,6 @@ class UpdateXc(sparse_coding.Fista):
             self.L = utils.max_eig(self.DtD)
         self.c = -1
         self.DCp1 = utils.get_block_col(D, self.nclass, self.D_range_ext)
-
 
     def fit(self, c):
         self.c = c
@@ -46,23 +46,25 @@ class UpdateXc(sparse_coding.Fista):
         self.DtYc = utils.get_block_col(self.DtY, c, self.Y_range)
         self.DtYc2 = self.DtYc.copy()
 
-        self.DtYc2[self.D_range_ext[c]:D_range_ext[c+1], :] = \
-                2*self.DtYc[self.D_range[c]: self.D_range_ext[c+1], :]
+        self.DtYc2[self.D_range_ext[c]:self.D_range_ext[c+1], :] = \
+                2*self.DtYc[self.D_range_ext[c]: self.D_range_ext[c+1], :]
 
         self.DtYc2[self.D_range_ext[-2]:self.D_range_ext[-1], :] = \
                 2*self.DtYc[self.D_range_ext[-2]:self.D_range_ext[-1], :]
 
-    def _grad(self, Xc):
+    def _grad(self, Xc0):
+        Xc = Xc0.copy()
+        c = self.c
         g0 = np.dot(self.DtD, Xc)
         Xcc = utils.get_block_row(Xc, self.c, self.D_range_ext)
         XCp1c = utils.get_block_row(Xc, self.nclass, self.D_range_ext)
         if self.k0 > 0:
             Xc[self.D_range_ext[c]: self.D_range_ext[c+1], :] = \
-                    np.dot(self.DctDc, Xcc) + np.dot(self.DCp1tDCp1, XCp1c)
-            Xc[self.D_range_ext[-2]: D_range_ext[-1], :] = \
+                    np.dot(self.DctDc, Xcc) + np.dot(self.DCp1tDc.T, XCp1c)
+            Xc[self.D_range_ext[-2]: self.D_range_ext[-1], :] = \
                     np.dot(self.DCp1tDCp1, XCp1c) + np.dot(self.DCp1tDc, Xcc)
         else:
-            Xc[self.D_range_ext[c]: D_range_ext[c+1], :] = np.dot(self.DctDc, Xcc)
+            Xc[self.D_range_ext[c]: self.D_range_ext[c+1], :] = np.dot(self.DctDc, Xcc)
         return g0 + Xc - self.DtYc2
 
     def _calc_f(self, Xc):
@@ -70,12 +72,13 @@ class UpdateXc(sparse_coding.Fista):
         optimize later
         """
         Xcc = utils.get_block_row(Xc, self.c, self.D_range_ext)
-        XCp1c = utils.get_block_row(Xc, self.C, self.D_range_ext)
+        XCp1c = utils.get_block_row(Xc, self.nclass, self.D_range_ext)
         cost = utils.normF2(self.Yc - np.dot(self.D, Xc))
-        cost += utils.normF2(self.Yc - np.dot(self.Dc, Xcc)) -\
-                np.dot(self.DCp1, XCp1c)
+        # pdb.set_trace()
+        cost += utils.normF2(self.Yc - np.dot(self.Dc, Xcc) -\
+                np.dot(self.DCp1, XCp1c))
         for i in range(self.nclass):
-            if i != c:
+            if i != self.c:
                 Xic = utils.get_block_row(Xc, i, self.D_range_ext)
                 cost += utils.normF2(Xic)
         return .5*cost
@@ -126,7 +129,7 @@ class COPAR(object):
             Xcc = utils.get_block_row(Xc, c, self.D_range_ext)
             XCp1c = utils.get_block_row(Xc, self.nclass, self.D_range_ext)
 
-            cost1 += utils.normF2(Yc - np.dot(Dc, Xcc)) - np.dot(DCp1, XCp1c)
+            cost1 += utils.normF2(Yc - np.dot(Dc, Xcc) - np.dot(DCp1, XCp1c))
             XX = Xc[: self.D_range_ext[-2], :]
             XX = np.delete(XX, range(self.D_range_ext[c], self.D_range_ext[c+1]), axis = 0)
             cost1 += utils.normF2(XX)
@@ -136,23 +139,31 @@ class COPAR(object):
                 self.D_range_ext, self.D_range_ext))
         return cost
 
-    def fit(self, Y, label_train, k, k0, iterations = 100, verbose = False, show_after = 10):
+    def fit(self, Y, label_train, k, k0, iterations = 100, verbose = False, show_after = 5):
         self.k = k
         self.k0 = k0
         self.Y = Y
         del Y
         self.Y_range = utils.label_to_range(label_train)
         self.nclass = self.Y_range.size - 1
-        D_range = k*range(self.nclass+1)
+        D_range = [k*i for i in range(self.nclass+1)]
         self.D_range_ext = D_range + [k*self.nclass + k0]
         # init
+        if verbose:
+            print('initializing ... ')
         self._initialize()
+        if verbose:
+            print('initialization cost = %.4f'%self.loss())
         for it in range(iterations):
-            self._updateX()
             self._updateD()
-        # pass
+            # print('iter \t%3d/%3d \t update D \t loss %.4f'%(it, iterations, self.loss()))
+            self._updateX()
+            if verbose and (it == 0 or (it + 1)%show_after == 0):
+                print('iter \t%3d/%3d \t loss %.4f'%(it+1, iterations, self.loss()))
 
     def _initialize(self):
+        self.D = np.zeros((self.Y.shape[0], self.D_range_ext[-1]))
+        self.X = np.zeros((self.D_range_ext[-1], self.Y.shape[1]))
         for c in range(self.nclass):
             clf = ODL(lambd = self.lambd)
             clf.fit(self._getYc(c), self.k)
@@ -169,9 +180,9 @@ class COPAR(object):
         for c in range(self.nclass):
             updatxc.fit(c)
             Xc = utils.get_block_col(self.X, c, self.Y_range)
+            # updatxc.check_grad(Xc)
             self.X[:, self.Y_range[c]: self.Y_range[c+1]] = \
-                    updatxc.solve
-        pass
+                    updatxc.solve(Xinit = Xc)
 
     def _updateD(self):
         Yhat = np.zeros_like(self.Y)
@@ -193,8 +204,8 @@ class COPAR(object):
             self.D[:,Dc_range] = optimize.DLSI_updateD(Dc, E, F, A.T, self.eta)
             Yhat[:, Yc_range] = Yc - np.dot(self.D[:, Dc_range], Xcc)
         ## DCp1
-        XCp1 = utils.get_block_row(X, self.nclass, self.D_range_ext)
-        Ybar = self.Y - np.dot(self.D[:, : self.D_range_ext[-2], \
+        XCp1 = utils.get_block_row(self.X, self.nclass, self.D_range_ext)
+        Ybar = self.Y - np.dot(self.D[:, : self.D_range_ext[-2]], \
                 self.X[: self.D_range_ext[-2], :])
         E = np.dot(Ybar + Yhat, XCp1.T)
         F = 2*np.dot(XCp1, XCp1.T)
@@ -208,8 +219,9 @@ class COPAR(object):
         E = np.zeros((self.nclass, Y.shape[1]))
         for c in range(self.nclass):
             Dc = self._getDc(c)
-            lasso = sparse_coding.Lasso(Dc, self.lambd)
-            Xc = lasso.solve(Y)
+            lasso = optimize.Lasso(Dc, self.lambd)
+            lasso.fit(Y)
+            Xc = lasso.solve()
             R1 = Y - np.dot(Dc, Xc)
             E[c, :] = 0.5*(R1*R1).sum(axis = 0) + self.lambd*abs(Xc).sum(axis = 0)
         return np.argmin(E, axis = 0) + 1
@@ -228,7 +240,7 @@ def _test_unit():
     dataset, Y_train, Y_test, label_train, label_test = \
            utils.train_test_split(dataset, N_train)
     clf = COPAR(lambd = 0.001, eta = 0.01)
-    clf.fit(Y_train, label_train, k = 10, iterations = 100, verbose = True)
+    clf.fit(Y_train, label_train, k = 10, k0 = 5, iterations = 10, verbose = True)
     clf.evaluate(Y_test, label_test)
 
 if __name__ == '__main__':

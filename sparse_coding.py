@@ -1,3 +1,4 @@
+
 from __future__ import print_function
 import numpy as np
 import utils
@@ -8,12 +9,11 @@ class Fista(object):
     def __init__(self):
         pass
 
-    def solve(self, Y, Xinit = None, iterations = 100, tol = 1e-8, verbose = False):
-        self.fit(Y)
+    def solve(self, Xinit = None, iterations = 100, tol = 1e-8, verbose = False):
         if Xinit is None:
             Xinit = np.zeros((self.D.shape[1], self.Y.shape[1]))
         Linv = 1/self.L
-        lambdaLiv = self.lamb/self.L
+        lambdaLiv = self.lambd/self.L
         x_old = Xinit.copy()
         y_old = Xinit.copy()
         t_old = 1
@@ -41,9 +41,9 @@ class Lasso(Fista):
         = argmin_X f(X) + lambd||X||_1
         F(x) = f(X) + lamb||X||_1
     """
-    def __init__(self, D, lamb = .1):
+    def __init__(self, D, lambd = .1):
         self.D = D
-        self.lamb = lamb
+        self.lambd = lambd
         self.DtD = np.dot(self.D.T, self.D)
         self.Y = None
         self.DtY = None
