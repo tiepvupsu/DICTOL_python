@@ -1,77 +1,10 @@
 from __future__ import print_function
-import utils
+import utils, optimize
 import sparse_coding
 import numpy as np
 # from numpy import linalg as LA
-from ODL import ODL, ODL_updateD
+from ODL import ODL
 
-def DLSI_updateD(D, E, F, A, lambda1, verbose = False, iterations = 100):
-    """
-    def DLSI_updateD(D, E, F, A, lambda1, verbose = False, iterations = 100):
-    problem: `D = argmin_D -2trace(ED') + trace(FD'*D) + lambda *||A*D||F^2,`
-    subject to: `||d_i||_2^2 <= 1`
-    where F is a positive semidefinite matrix
-    ========= aproach: ADMM ==============================
-    rewrite: `[D, Z] = argmin -2trace(ED') + trace(FD'*D) + lambda ||A*Z||_F^2,`
-        subject to `D = Z; ||d_i||_2^2 <= 1`
-    aproach 1: ADMM.
-    1. D = -2trace(ED') + trace(FD'*D) + rho/2 ||D - Z + U||_F^2,
-        s.t. ||d_i||_2^2 <= 1
-    2. Z = argmin lambda*||A*Z|| + rho/2||D - Z + U||_F^2
-    3. U = U + D - Z
-    solve 1: D = argmin -2trace(ED') + trace(FD'*D) + rho/2 ||D - W||_F^2
-                          with W = Z - U;
-               = argmin -2trace((E - rho/2*W)*D') +
-                  trace((F + rho/2 * eye())*D'D)
-    solve 2: derivetaive: 0 = 2A'AZ + rho (Z - V) with V = D + U
-    `Z = B*rhoV` with `B = (2*lambda*A'*A + rho I)^{-1}`
-    `U = U + D - Z`
-    -----------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 5/11/2016
-            (http://www.personal.psu.edu/thv102/)
-    -----------------------------------------------
-    """
-    def calc_cost(D):
-        cost = -2*np.trace(np.dot(E, D.T)) + np.trace(np.dot(F, np.dot(D.T, D))) +\
-            lambda1*utils.normF2(np.dot(A, D))
-        return cost
-    it    = 0
-    rho   = 1.0
-    Z_old = D.copy()
-    U     = np.zeros_like(D)
-    I_k   = np.eye(D.shape[1])
-    X     = 2*lambda1/rho*A.T
-    Y     = A.copy()
-    B1    = np.dot(X, utils.inv_IpXY(Y, X))
-
-    # B1 = np.dot(X, LA.inv(eye(Y.shape[0]) + np.dot(Y, X)))
-    tol = 1e-8
-    # optsD = Opts_DLSI(max_iter = 100)
-    for it in range(iterations):
-        it += 1
-        # update D
-        W  = Z_old - U
-        E2 = E + rho/2*W
-        F2 = F + rho/2*I_k
-        # D_old = D.copy()
-        D  = ODL_updateD(D, E2, F2)
-        # print normF2(D - D_old)
-        # update Z
-        V     = D + U
-        Z_new = rho*(V - np.dot(B1, np.dot(Y, V)))
-        e1    = utils.normF2(D - Z_new)
-        e2    = rho*utils.normF2(Z_new - Z_old)
-        if e1 < tol and e2 < tol:
-            break
-        # if opts.verbose:
-        #     cost = calc_cost(D)
-        #     print 'iter = %3d | costD = %5.4f | normF2(D - Z) = %5.4f | rho(Z_new - Z_old = %5.4f' \
-        #         %(it, cost, e1, e2)
-        # update U
-        U     = U + D - Z_new
-        Z_old = Z_new.copy()
-
-    return D
 class DLSI(object):
     def __init__(self, lambd = 0.01, eta = 0.01, updateD_iters = 100, updateX_iters = 100):
         self.lambd = 0.01
@@ -143,53 +76,9 @@ class DLSI(object):
         E = np.dot(Yc, self.X[c].T)
         F = np.dot(self.X[c], self.X[c].T)
         A = np.delete(self.D, range(self.D_range[c], self.D_range[c+1]), axis = 1).T
-        # """
-        # problem: `D = argmin_D -2trace(ED') + trace(FD'*D) + lambda *||A*D||F^2,`
-        # subject to: `||d_i||_2^2 <= 1`
-        # where F is a positive semidefinite matrix
-        # ========= aproach: ADMM ==============================
-        # rewrite: `[D, Z] = argmin -2trace(ED') + trace(FD'*D) + lambda ||A*Z||_F^2,`
-        #     subject to `D = Z; ||d_i||_2^2 <= 1`
-        # aproach 1: ADMM.
-        # 1. D = -2trace(ED') + trace(FD'*D) + rho/2 ||D - Z + U||_F^2,
-        #     s.t. ||d_i||_2^2 <= 1
-        # 2. Z = argmin lambda*||A*Z|| + rho/2||D - Z + U||_F^2
-        # 3. U = U + D - Z
-        # solve 1: D = argmin -2trace(ED') + trace(FD'*D) + rho/2 ||D - W||_F^2
-        #                       with W = Z - U;
-        #            = argmin -2trace((E - rho/2*W)*D') +
-        #               trace((F + rho/2 * eye())*D'D)
-        # solve 2: derivetaive: 0 = 2A'AZ + rho (Z - V) with V = D + U
-        # `Z = B*rhoV` with `B = (2*lambda*A'*A + rho I)^{-1}`
-        # `U = U + D - Z`
-        # -----------------------------------------------
-        # Author: Tiep Vu, thv102@psu.edu, 5/11/2016
-        #         (http://www.personal.psu.edu/thv102/)
-        # -----------------------------------------------
-        # """
-        # rho = 1.0
-        # Z_old = Dc.copy()
-        # U = np.zeros_like(Dc)
-        # I_k = np.eye(Dc.shape[1])
-        # X = 2*self.lambd/rho*A.T
-        # Y = A.copy()
-        # B1 = np.dot(X, utils.inv_IpXY(Y, X))
-        # tol = 1e-8
-        # for it in range(self.updateD_iters):
-        #     W = Z_old - U
-        #     E2 = E + rho/2*W
-        #     F2 = F + rho/2*I_k
-        #     Dc = ODL_updateD(Dc, E2, F2)
-        #     V = Dc + U
-        #     Z_new = rho*(V - np.dot(B1, np.dot(Y, V)))
-        #     e1 = utils.normF2(Dc - Z_new)
-        #     e2 = rho*utils.normF2(Z_new - Z_old)
-        #     if e1 < tol and e2 < tol:
-        #         break
-        #     U = U + Dc - Z_new
-        #     Z_old = Z_new.copy()
-        # self.D[:, self.D_range[c]:self.D_range[c+1]] = Dc
-        self.D[:, self.D_range[c]:self.D_range[c+1]] = DLSI_updateD(Dc, E, F, A, self.lambd)
+
+        self.D[:, self.D_range[c]:self.D_range[c+1]] = \
+                optimize.DLSI_updateD(Dc, E, F, A, self.lambd)
 
 
     def loss(self):

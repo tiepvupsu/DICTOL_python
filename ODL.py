@@ -1,48 +1,8 @@
 from __future__ import print_function
-import utils
+import utils, optimize
 import sparse_coding
 import numpy as np
-from numpy import linalg as LA
-
-def ODL_updateD(D, E, F, iterations = 100, tol = 1e-8):
-    """
-    * The main algorithm in ODL.
-    * Solving the optimization problem:
-      `D = arg min_D -2trace(E'*D) + trace(D*F*D')` subject to: `||d_i||_2 <= 1`,
-         where `F` is a positive semidefinite matrix.
-    * Syntax `[D, iter] = ODL_updateD(D, E, F, opts)`
-      - INPUT:
-        + `D, E, F` as in the above problem.
-        + `opts`. options:
-          * `iterations`: maximum number of iterations.
-          * `tol`: when the difference between `D` in two successive
-                    iterations less than this value, the algorithm will stop.
-      - OUTPUT:
-        + `D`: solution.
-    -----------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 04/07/2016
-            (http://www.personal.psu.edu/thv102/)
-    -----------------------------------------------
-    """
-    def calc_cost(D):
-        return -2*np.trace(np.dot(E, D.T)) + np.trace(np.dot(np.dot(F, D.T), D))
-
-    D_old = D.copy()
-    it = 0
-    sizeD = utils.numel(D)
-    # print opts.tol
-    # while it < opts.max_iter:
-    for it in range(iterations):
-        for i in xrange(D.shape[1]):
-            if F[i,i] != 0:
-                a = 1.0/F[i,i] * (E[:, i] - D.dot(F[:, i])) + D[:, i]
-                D[:,i] = a/max(LA.norm(a, 2), 1)
-
-        if LA.norm(D - D_old, 'fro')/sizeD < tol:
-            break
-        D_old = D.copy()
-    return D
-
+# from numpy import linalg as LA
 
 class ODL(object):
     """
@@ -78,7 +38,7 @@ class ODL(object):
             # update D
             F = np.dot(self.X, self.X.T)
             E = np.dot(self.Y, self.X.T)
-            self.D = ODL_updateD(self.D, E, F, iterations = self.updateD_iters)
+            self.D = optimize.ODL_updateD(self.D, E, F, iterations = self.updateD_iters)
             if verbose:
                 print('iter \t%d/%d \t\t loss \t%.4f'%(it, iterations, self.loss()))
 

@@ -1,8 +1,88 @@
 from __future__ import print_function
-import utils
+import utils, optimize
 import sparse_coding
 import numpy as np
-from ODL import ODL, ODL_updateD
+from ODL import ODL
+
+class UpdateXc(sparse_coding.Fista):
+    """
+    Update Xc in COPAR (page 189-190 COPAR)
+    see COPAR paper:
+    http://www.cs.zju.edu.cn/people/wangdh/papers/draft_ECCV12_particularity.pdf
+
+     cost = normF2(Yc - D*Xc) + normF2(Yc - DcXcc - DCp1*XCp1c) +
+              sum_{i \neq c, 1 \leq i \leq C} normF2(Xic);
+    -----------------------------------------------
+    Author: Tiep Vu, thv102@psu.edu, 5/12/2016
+            (http://www.personal.psu.edu/thv102/)
+    -----------------------------------------------
+    """
+    def __init__(self, D, D_range_ext, Y, Y_range, lambd, iterations = 100):
+        self.D = D
+        self.lamb = lamb
+        self.DtD = np.dot(self.D.T, self.D)
+        self.Y =Y
+        self.Y_range = Y_range
+        self.nclass = len(D_range_ext) - 2
+        self.DtY = np.dot(D.T, Y)
+        self.DCp1 = utils.get_block_col(D, self.nclass, D_range_ext)
+        self.DCp1tDCp1 = np.dot(self.DCp1.T, self.DCp1)
+        self.k0 = D_range_ext[-1] - D_range_ext[-2]
+        if self.k0 > 0:
+            self.L = utils.max_eig(self.DtD) + utils.max_eig(self.DCp1tDCp1)
+        else:
+            self.L = utils.max_eig(self.DtD)
+        self.c = -1
+        self.DCp1 = utils.get_block_col(D, self.nclass, self.D_range_ext)
+
+
+    def fit(self, c):
+        self.c = c
+        self.Yc = utils.get_block_col(self.Y, c, self.Y_range)
+        self.Dc = utils.get_block_col(self.D, c, self.D_range_ext)
+        ## for _grad function
+        self.DctDc = utils.get_block(self.DtD, c, c, self.D_range_ext, self.D_range_ext)
+        self.DCp1tDc = utils.get_block(self.DtD, self.nclass, c, self.D_range_ext, self.D_range_ext)
+        self.DtYc = utils.get_block_col(self.DtY, c, self.Y_range)
+        self.DtYc2 = self.DtYc.copy()
+
+        self.DtYc2[self.D_range_ext[c]:D_range_ext[c+1], :] = \
+                2*self.DtYc[self.D_range[c]: self.D_range_ext[c+1], :]
+
+        self.DtYc2[self.D_range_ext[-2]:self.D_range_ext[-1], :] = \
+                2*self.DtYc[self.D_range_ext[-2]:self.D_range_ext[-1], :]
+
+    def _grad(self, Xc):
+        g0 = np.dot(self.DtD, Xc)
+        Xcc = utils.get_block_row(Xc, self.c, self.D_range_ext)
+        XCp1c = utils.get_block_row(Xc, self.nclass, self.D_range_ext)
+        if self.k0 > 0:
+            Xc[self.D_range_ext[c]: self.D_range_ext[c+1], :] = \
+                    np.dot(self.DctDc, Xcc) + np.dot(self.DCp1tDCp1, XCp1c)
+            Xc[self.D_range_ext[-2]: D_range_ext[-1], :] = \
+                    np.dot(self.DCp1tDCp1, XCp1c) + np.dot(self.DCp1tDc, Xcc)
+        else:
+            Xc[self.D_range_ext[c]: D_range_ext[c+1], :] = np.dot(self.DctDc, Xcc)
+        return g0 + Xc - self.DtYc2
+
+    def _calc_f(self, Xc):
+        """
+        optimize later
+        """
+        Xcc = utils.get_block_row(Xc, self.c, self.D_range_ext)
+        XCp1c = utils.get_block_row(Xc, self.C, self.D_range_ext)
+        cost = utils.normF2(self.Yc - np.dot(self.D, Xc))
+        cost += utils.normF2(self.Yc - np.dot(self.Dc, Xcc)) -\
+                np.dot(self.DCp1, XCp1c)
+        for i in range(self.nclass):
+            if i != c:
+                Xic = utils.get_block_row(Xc, i, self.D_range_ext)
+                cost += utils.normF2(Xic)
+        return .5*cost
+
+    def lossF(self, Xc):
+        return self._calc_f(Xc) + utils.norm1(Xc)
+
 
 class COPAR(object):
     def __init__(self, lambd = 0.01, eta = 0.0001, updateX_iters = 100, updateD_iters = 100):
@@ -63,8 +143,8 @@ class COPAR(object):
         del Y
         self.Y_range = utils.label_to_range(label_train)
         self.nclass = self.Y_range.size - 1
-        self.D_range = k*range(self.nclass+1)
-        self.D_range_ext = self.D_range + [k*self.nclass + k0]
+        D_range = k*range(self.nclass+1)
+        self.D_range_ext = D_range + [k*self.nclass + k0]
         # init
         self._initialize()
         for it in range(iterations):
@@ -85,11 +165,20 @@ class COPAR(object):
             self.X[self.D_range_ext[-2]:self.D_range_ext[-1]]
 
     def _updateX(self):
+        updatxc = UpdateXc(self.D, self.D_range_ext, self.Y, self.Y_range, self.lambd, iterations = 100)
+        for c in range(self.nclass):
+            updatxc.fit(c)
+            Xc = utils.get_block_col(self.X, c, self.Y_range)
+            self.X[:, self.Y_range[c]: self.Y_range[c+1]] = \
+                    updatxc.solve
         pass
 
     def _updateD(self):
         Yhat = np.zeros_like(self.Y)
+        DCp1 = self._getDc(self.nclass)
         for c in range(self.nclass):
+            Dc_range = range(self.D_range_ext[c], self.D_range_ext[c+1])
+            Yc_range = range(self.Y_range[c], self.Y_range[c+1])
             Yc = self._getYc(c)
             Dc = self._getDc(c)
             Xc = utils.get_block_col(self.X, c, self.Y_range)
@@ -99,11 +188,21 @@ class COPAR(object):
             Ycbar = Yc - np.dot(DCp1, XCp1c)
             E = np.dot(Ychat + Ycbar, Xcc.T)
             F = 2*np.dot(Xcc, Xcc.T)
-            A = D.copy()
-            Dc_range = range(self.D_range_ext[c], self.D_range_ext[c+1])
+            A = self.D.copy()
             A = np.delete(A, Dc_range, axis = 1)
-            self.D[:,Dc_range]
-        pass
+            self.D[:,Dc_range] = optimize.DLSI_updateD(Dc, E, F, A.T, self.eta)
+            Yhat[:, Yc_range] = Yc - np.dot(self.D[:, Dc_range], Xcc)
+        ## DCp1
+        XCp1 = utils.get_block_row(X, self.nclass, self.D_range_ext)
+        Ybar = self.Y - np.dot(self.D[:, : self.D_range_ext[-2], \
+                self.X[: self.D_range_ext[-2], :])
+        E = np.dot(Ybar + Yhat, XCp1.T)
+        F = 2*np.dot(XCp1, XCp1.T)
+        A = self.D[:, : self.D_range_ext[-2]]
+        DCp1_range = range(self.D_range_ext[-2], self.D_range_ext[-1])
+        self.D[:, DCp1_range] = optimize.DLSI_updateD(
+            self.D[:, DCp1_range], E, F, A.T, self.eta)
+        # pass
 
     def predict(self, Y):
         E = np.zeros((self.nclass, Y.shape[1]))
