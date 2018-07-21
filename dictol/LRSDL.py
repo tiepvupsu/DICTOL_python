@@ -1,5 +1,6 @@
 """
-Low-rank shared dictionary learning
+Low-rank Shared Dictionary Learning
+and Fisher Discriminant Dictionary Learning
 """
 from __future__ import print_function
 import optimize, matlab_syntax
