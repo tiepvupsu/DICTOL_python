@@ -1,21 +1,40 @@
 # import numpy as np
 # from numpy import linalg as LA
-from matlab_syntax import *
 # import scipy.io as sio
-import cPickle
+# import cPickle
 import math
-import sys
+# import sys
 import time
 from time import strftime
+import numpy as np
+import numpy.linalg as LA
 # from six.moves import cPickle as pickle
 import os
-import io
+# import io
 import scipy.io as sio
-import pickle
-from ODL import *
+# import pickle
+# from ODL import *
 test = True
 # test = False
 
+def repmat(A, rows, cols):
+    """
+    :param A:
+    :param rows:
+    :param cols:
+    :return:
+    """
+    return np.tile(A, (cols, rows)).T
+
+def vec(A):
+    """
+    * Syntax: `a = vec(A)`
+    * Vectorization of a matrix. This function is a built-in function in some
+    recent MATLAB version.
+    """
+    # pass
+    # return A.reshape((-1, 1), order = 'F')
+    return A.flatten(1)
 
 def get_time_str():
     print 'Time now: ' + strftime("%m/%d/%Y %H:%M:%S")
@@ -58,7 +77,6 @@ def range_to_label(arange):
     C = arange.size - 1
     label = np.ones((arange[-1], ), dtype=np.int)
     for i in xrange(1, C):
-        n = arange[i] - arange[i-1]
         label[arange[i]: arange[i+1]] *= (i+1)
     return label
 
@@ -217,7 +235,7 @@ def nuclearnorm(X):
     * Return nuclear norm of a matrix.
     * Syntax `res = nuclearnorm(X)`
     """
-    if numel(X) == 0:
+    if X.size == 0:
         return 0
     return LA.norm(X) if is_vector(X) else LA.norm(X, 'nuc')
 
@@ -251,178 +269,6 @@ def shrinkage_rank(D, alambda):
     s1 = np.maximum(0, s - alambda)
     return np.dot(U, np.dot(np.diag(s1), V))
 
-
-def shrinkage_rank_test():
-    # pass
-    print('-------------------------------------------')
-    print '`shrinkage_rank` test:'
-    D = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    alambda = 0.1
-    print 'matlab result'
-    print '    1.0586    1.9944    2.9302'
-    print '    3.9944    4.9721    5.9498'
-    print '    6.9302    7.9498    8.9693'
-    print shrinkage_rank(D, alambda)
-
-
-def min_rank_dict0_test():
-    print '------------------------------------'
-    print '`min_rank_dict0` test: '
-
-    d = 10
-    N = 10
-    k = 5
-    Y = normc(np.random.rand(d, N))
-    D = normc(np.random.rand(d, k))
-    X = np.random.rand(k, N)
-    opts = Opts()
-    lambdaD = 0.01
-    D = min_rank_dict0(Y, X, lambdaD, D, opts)
-
-def fista(fn_grad, Xinit, L, alambda, opts, fn_calc_F, show_progress = False):
-    """
-    * A Fast Iterative Shrinkage-Thresholding Algorithm for Linear Inverse
-            Problems.
-    * Solve the problem: `X = arg min_X F(X) = f(X) + lambda||X||_1` where:
-       - `X`: variable, can be a matrix.
-       - `f(X)` is a smooth convex function with continuously differentiable
-       with Lipschitz continuous gradient `L(f)`
-       (Lipschitz constant of the gradient of `f`).
-    * Syntax: `[X, iter] = fista(grad, Xinit, L, lambda, opts, calc_F)` where:
-       - INPUT:
-            + `grad`: a _function_ calculating gradient of `f(X)` given `X`.
-            + `Xinit`: initial guess.
-            + `L`: the Lipschitz constant of the gradient of `f(X)`.
-            + `lambda`: a regularization parameter, can be either positive a
-                    scalar or a weighted matrix.
-            + `opts`: a _structure_ variable describing the algorithm.
-              * `opts.max_iter`: maximum iterations of the algorithm.
-                    Default `300`.
-              * `opts.tol`: a tolerance, the algorithm will stop if difference
-                    between two successive `X` is smaller than this value.
-                    Default `1e-8`.
-              * `opts.show_progress`: showing `F(X)` after each iteration or
-                    not. Default `false`.
-            + `calc_F`: optional, a _function_ calculating value of `F` at `X`
-                    via `feval(calc_F, X)`.
-      - OUTPUT:
-        + `X`: solution.
-        + `iter`: number of iterations.
-    """
-    Linv = 1/L
-    lambdaLiv = alambda/L
-    x_old = Xinit.copy()
-    y_old = Xinit.copy()
-    t_old = 1
-    it = 0
-    cost_old = float("inf") # the positive infinity number
-    while it < opts.max_iter:
-        it += 1
-        x_new = np.real(shrinkage(y_old - Linv*fn_grad(y_old), lambdaLiv))
-        t_new = 0.5*(1 + math.sqrt(1 + 4*t_old**2))
-        y_new = x_new + (t_old - 1)/t_new * (x_new - x_old)
-        e = norm1(x_new - x_old)/x_new.size
-        if e < opts.tol:
-            break;
-        x_old = x_new.copy()
-        t_old = t_new
-        y_old = y_new.copy()
-        if opts.verbose:
-            cost_new = fn_calc_F(x_new)
-            # if cost_new <= cost_old:
-            #     stt = 'YES.'
-            # else:
-            #     stt = 'No, check your code.'
-            print 'iter = '+str(it)+', cost = %4.4f' % cost_new #\
-                # ', cost decreases? ',     stt
-            cost_old = cost_new
-        if not opts.verbose and show_progress and it%10 == 0:
-            str0 = progress_str(it, opts.max_iter, 50)
-            sys.stdout.write("\r%s %.2f%%" % (str0, (it*100.0)/opts.max_iter ))
-            sys.stdout.flush()
-    if not opts.verbose and show_progress and it%10 == 0:
-        print ''
-    return (x_new, it)
-
-def lasso_fista(Y, D, Xinit, alambda, opts, show_progress = False):
-    """
-    * Syntax: `[X, iter] = lasso_fista(Y, D, Xinit, lambda, opts)`
-    * Solving a Lasso problem using FISTA [[11]](#fn_fista):
-        `X, = arg min_X 0.5*||Y - DX||_F^2 + lambda||X||_1`.
-        Note that `lambda` can be either a positive scalar or a matrix with
-        positive elements.
-      - INPUT:
-        + `Y, D, lambda`: as in the problem.
-        + `Xinit`: Initial guess
-        + `opts`: options. See also [`fista`](#fista)
-      - OUTPUT:
-        + `X`: solution.
-        + `iter`: number of fistat iterations.
-    * **Note**:
-      - _To see a toy example, un this function without inputs_
-      - _Can be used for solving a Weighted Lasso problem_.
-    """
-    # pass
-    if numel(Xinit) == 0:
-        Xinit = np.zeros((D.shape[1], Y.shape[1]))
-
-    def calc_f(X):
-        return 0.5*normF2(Y - np.dot(D, X))
-
-    def calc_F(X):
-        if isinstance(alambda, np.ndarray):
-            return calc_f(X) + alambda*abs(X) # element-wise multiplication
-        else:
-            return calc_f(X) + alambda*norm1(X)
-
-    DtD = np.dot(D.T, D)
-    DtY = np.dot(D.T, Y)
-    def grad(X):
-        g =  np.dot(DtD, X) - DtY
-        return g
-    L = np.max(LA.eig(DtD)[0])
-    (X, it) = fista(grad, Xinit, L, alambda, opts, calc_F, show_progress)
-    return (X, it)
-
-def lasso_fista_test():
-    d = 300
-    N = 700
-    k = 700
-    Y = normc(np.random.rand(d, N))
-    D = normc(np.random.rand(d, k))
-    opts = Opts(test_mode = False, max_iter=50, show_cost = False)
-    alambda = 0.01
-    lasso_fista(Y, D, np.array([]), alambda, opts)
-
-class Opts:
-    """
-    parameters options. Store regularization parameters and algorithm stop
-    criteria
-    """
-    def __init__(self, tol = 1e-8, max_iter = 100, show_cost = False,\
-        test_mode = False, lambda1 = None, lambda2 = None, lambda3 = None, \
-        eta = None, check_grad = False, verbose = False):
-        self.tol        = tol
-        self.max_iter   = max_iter
-        self.show_cost  = show_cost
-        self.test_mode  = test_mode
-        self.check_grad = check_grad
-        self.lambda1    = lambda1
-        self.lambda2    = lambda2
-        self.lambda3    = lambda3
-        self.verbose     = verbose
-
-    def copy(self):
-        opts = Opts()
-        opts.tol        = self.tol
-        opts.max_iter   = self.max_iter
-        opts.show_cost  = self.show_cost
-        opts.test_mode  = self.test_mode
-        opts.check_grad = self.check_grad
-        opts.lambda1    = self.lambda1
-        opts.lambda2    = self.lambda2
-        opts.lambda3    = self.lambda3
-        return opts
 
 class MyForm:
     """
@@ -519,44 +365,6 @@ def MyForm_test():
         print 'diff =', dif, '\n   ...FAIL'
 
 
-def inv_IpXY(X, Y):
-    """
-    Calculating inv(I + XY)
-    if X.shape[0] < X.shape[1], use regular inversion
-    else
-    using the equality:
-    inv(I + XY) = I - X*inv(I - YX)*Y
-    """
-    if X.shape[0] < X.shape[1]:
-        return LA.inv(np.eye(X.shape[0]) + np.dot(X, Y))
-    else:
-        return np.eye(X.shape[0]) - \
-        X.dot(LA.inv(np.eye(X.shape[1]) + Y.dot(X))).dot(Y)
-
-def inv_IpXY_test():
-    print ('----------------------------------------')
-    print '`inv_IpXY` test ...',
-    d1 = 200
-    d2 = 20
-    X = np.random.rand(d1, d2)
-    Y = np.random.rand(d2, d1)
-
-    t1 = time.time()
-    M1 = LA.inv(np.eye(d1) + X.dot(Y))
-    t2 = time.time()
-
-    t3 = time.time()
-    M2 = inv_IpXY(X, Y)
-    t4 = time.time()
-
-    print '\nCompare running time:\n  regular: %5.2f' % (t2 - t1), \
-        '(s)\n  fast   : %5.2f' % (t4 - t3), '(s)'
-    dif = LA.norm(M1 - M2)
-    if dif < 1e-8:
-        print 'diff =', dif, '\n   ...PASS'
-    else:
-        print 'diff =', dif, '\n   ...FAIL'
-
 def randperm(n):
     return np.random.permutation(xrange(n))
 
@@ -578,10 +386,11 @@ def pickDfromY(Y, Y_range, D_range):
         N_c = Yc.shape[1]
         # print Yc
         ids = randperm(N_c)
-        range_Dc = get_range(D_range, c)
+        # range_Dc = get_range(D_range, c)
         kc = D_range[c+1] - D_range[c]
         D[:, D_range[c]:D_range[c+1]] = Yc[:, np.sort(ids[:kc])]
     return D
+
 
 def pickDfromY_test():
     print ('----------------------------------')
@@ -596,63 +405,12 @@ def pickDfromY_test():
     # print Y_range
     print D
 
-def myload(filename):
-    # import testPickle
-    # A = sio.loadmat(filename)
-    # with open(filename, 'rb') as input_file:
-    #     A = cPickle.load(input_file)
-    # A = pickle.load(input_file)
-    # A = pickle.load( open(filename, "rb" ) )
 
+def myload(filename):
     print filename
     A = sio.loadmat(filename)
     return A
-    # return testPickle.pickle_load(filename)
-    # print A['label_test']
 
-def SRC_pred(Y, D, D_range, lambda1, opts, show_progress = False):
-    """
-    * Classification based on SRC.
-    * Syntax: `[pred, X] = SRC_pred(Y, D, D_range, lambda1, opts)`
-      - INPUT:
-        + `Y`: test samples.
-        + `D`: the total dictionary. `D = [D_1, D_2, ..., D_C]` with `D_c`
-            being the _c-th_ class-specific dictionary.
-        + `D_range`: range of class-specific dictionaries in `D`.
-        + `opts`: options.
-          * `opts.lambda`: `lambda` for the Lasso problem.
-          * `opts.max_iter`: maximum iterations of fista algorithm.
-          * others.
-      - OUTPUT:
-        + `pred`: predicted labels of test samples.
-        + `X`: solution of the lasso problem.
-    Ref:
-    1. Wright, John, et al. "Robust face recognition via sparse representation."
-       Pattern Analysis and Machine Intelligence, IEEE Transactions on, (2009)
-    -----------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 4/6/2016
-            (http://www.personal.psu.edu/thv102/)
-    -----------------------------------------------
-    """
-    C = D_range.size - 1
-    pred = np.zeros((1, Y.shape[1]))
-
-    print "sparse coding...",
-    print ''
-    X,_ = lasso_fista(Y, D, np.array([]), lambda1, opts, show_progress)
-    print "done"
-
-    E = np.zeros((C, Y.shape[1]))
-
-    for i in xrange(C):
-        Xi = get_block_row(X, i, D_range)
-        Di = get_block_col(D, i, D_range)
-        R = Y - np.dot(Di, Xi)
-        E[i,:] = (R*R).sum(axis = 0)
-
-    pred = np.argmin(E, axis = 0) + 1
-
-    return vec(pred)
 
 def pickTrainTest(dataset, N_train_c):
     data_fn = os.path.join('data', dataset + '.pickle')
@@ -739,7 +497,7 @@ def train_test_split(dataset, N_train):
         label_train = vec(Vars['label_train']).astype(int)
         label_test  = vec(Vars['label_test']).astype(int)
         range_train = label_to_range(label_train)
-        range_test  = label_to_range(label_test)
+        # range_test  = label_to_range(label_test)
 
         new_range_train = N_train * np.arange(N_train + 1)
         Y_train         = pickDfromY(Y_train, range_train, new_range_train)
@@ -767,7 +525,7 @@ def train_test_split(dataset, N_train):
         label_train = vec(Vars['label_train'])
         label_test  = vec(Vars['label_test'])
         range_train = label_to_range(label_train)
-        range_test  = label_to_range(label_test)
+        # range_test  = label_to_range(label_test)
         C = range_train.size - 1
         new_range_train = N_train * np.arange(C + 1)
         label_train     = range_to_label(new_range_train)
@@ -781,32 +539,6 @@ def train_test_split(dataset, N_train):
             pickTrainTest(dataset, N_train)
     return (dataset, Y_train, Y_test, \
             label_train.astype(int), label_test.astype(int))
-
-def SRC_top(dataset, N_train, lambda1, verbose = False, show_progress = False):
-    print "===================SRC=================="
-    dataset, Y_train, Y_test, label_train, label_test = \
-        train_test_split(dataset, N_train)
-
-    opts = Opts(max_iter = 500, verbose = verbose, test_mode = False)
-    train_range = label_to_range(label_train)
-
-    pred = SRC_pred(Y_test, Y_train, train_range, lambda1, opts, show_progress)
-    # print pred
-    acc = calc_acc(pred, label_test)
-    print 'Overall accuracy: %.2f %%' % (acc*100)
-    print ''
-
-    return acc
-
-
-# build_mean_matrix_test()
-
-
-
-
-#################### DLSI ##########################
-
-#################### DFDL ##########################
 
 #################### DLCOPAR #######################
 
@@ -881,7 +613,7 @@ def buildMean(X):
     return build_mean_matrix(X)
 
 def calc_acc(pred, ground_truth):
-    acc = np.sum(pred == ground_truth)/ float(numel(ground_truth))
+    acc = np.sum(pred == ground_truth)/ float(ground_truth.size)
     return acc
 
 def range_delete_ids(a_range, ids):
@@ -891,8 +623,8 @@ def range_delete_ids(a_range, ids):
     % element of that array indexed by `ids`, `new_range` is the new range
     """
     ids = np.sort(ids)
-    n = numel(a_range)
-    m = numel(ids)
+    n = a_range.size
+    # m = ids.size
     a = np.zeros_like(a_range)
     j = 1
     while j < n-1:
@@ -974,128 +706,7 @@ def inv_IpXY_test():
     print 't2 = ', t2 - t1
     print 'diff = ', normF2(A - B)
 
-# inv_IpXY_test()
-
-# test = False
-# if test:
-    # label_to_range_test()
-    # range_to_label_test()
-    # get_block_col_test()
-    # get_block_row_test()
-    # get_block_test()
-    # vec_test()
-
-    # norm1_test()
-    # normF2_test()
-    # # nuclearnorm_test()
-    # # shrinkage_test()
-    # # shrinkage_rank_test()
-    # MyForm_test()
-    # inv_IpXY_test()
-    # check_grad_test()
-    # randperm_test()
-    # pickDfromY_test()
-    # myload('data/myARgender.pickle')
-    # normF2_test()
-    # t1 = time.time()
-    # # acc = SRC_top('myARreduce', 7, 0.001)
-    # t2 = time.time();
-    # print acc, t2 - t1
-    # lasso_fista_test()
-    # print 'hello'
-    # ODL_test()
-    # check_grad_test()
-    # LRSDL_test()
-    # buildMhat_test()
-    # LRSDL_top('myYaleB', 50, 20, 5, 0.001, 0.01, .1)
-    # min_rank_dict0_test()
-    # repmat_test()
-    # build_mean_matrix_test()
-    # opts = Opts()
-    # opts2 = opts
-    # print opts.max_iter
-    # opts2.max_iter = 0
-    # print opts.max_iter
-
 def progress_str(cur_val, max_val, total_point=50):
     p = int(math.ceil(float(cur_val)*total_point/ max_val))
     return '|' + p*'#'+ (total_point - p)*'.'+ '|'
 
-def min_rank_dict0(Y, X, lambdaD, Dinit, opts):
-    """
-    This function try to solve the following problem:
-    [D] = argmin_D 0.5*|| Y - DX||_F^2 + lambdaD ||D||_*
-    s.t. ||d_i||_2^2 <= 1, for all i
-    using ADMM:
-    INPUT:
-        Y: Data
-        Dinit: intitial D
-        X: sparse code
-        lambdaD: regularization term
-    OUTPUT:
-        D:
-    Created: Tiep Vu 6/29/2015 2:05:28 PM
-    ------------------------
-    Choose a rho.
-    Algorithm summary
-    ADMM: D,J = argmin_DJ 0.5*||Y - DX||_F^2 + lambdaD||J||_*
-    s.t ||d_i||_2^2 <= 1 and J = D
-    Alternatively solving:
-    (1): D^{k+1} = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U^k||_F^2
-        s.t. ||d_i||_2^2 <= 1
-        this problem can be soved using the update dictionary stage in
-            Online Dictionary Learning method
-    (2): J^{k+1} = argminJ lambdaD||J||_* + rho/2||J - D^{k+1} + U^k||
-        Solution: shrinkage_rank(D^{k+1} - U^k, lambdaD/rho)
-    (3): Update U: U^{k+1} = U^k + J^{k+1} - D^{k+1}
-     Stoping cretia:
-    ||r^k||_F^2 <= tol, ||s^k||_F^2 <= tol
-    r^k = J^k - D^k
-    s^k = rho(J^{k+1} - J^k)
-    ---------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 04/22/2016
-            http://www.personal.psu.edu/thv102/
-    ---------------------------------------------
-    """
-    YXt = np.dot(Y, X.T)
-    XXt = np.dot(X, X.T)
-    rho = 0.25
-    D_old = Dinit
-    J_old = Dinit
-    U_old = np.zeros_like(Dinit)
-    it = 0
-    I = np.eye(XXt.shape[0])
-    tau = 2
-    mu = 10.0
-    optsD = opts
-    optsD.max_iter = 50
-    while it < opts.max_iter:
-        it += 1
-        ## =========update D ================================
-        # D = argmin_D 0.5*||Y - DX||_F^2 + rho/2 ||J - D + U||_F^2
-        # s.t. ||d_i||_2^2 <= 1
-        E = YXt + rho*(J_old + U_old)
-        F = XXt + rho*I
-        # D_new = updateD_EF(D_old, E, F, 10);
-        D_new = ODL_updateD(D_old, E, F, optsD)
-        ## ========= update J ==============================
-        # J^{k+1} = argminJ lambdaD||J||_* + rho/2||J - D + U||
-        J_new = np.real(shrinkage_rank(D_new - U_old, lambdaD/rho))
-         ## ========= update U ==============================
-        U_new = U_old + J_new - D_new
-
-        ## ========= check stop ==============================
-        r = J_new - D_new
-        s = rho*(J_new - J_old)
-        r_eps = LA.norm(r, 'fro')
-        s_eps = LA.norm(s, 'fro')
-        if r_eps < opts.tol and s_eps < opts.tol:
-            break
-        D_old = D_new
-        J_old = J_new
-        U_old = U_new
-        if r_eps > mu*s_eps:
-            rho = rho*tau
-        elif s_eps > mu*r_eps:
-            rho = rho/tau
-    return D_new
