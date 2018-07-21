@@ -798,21 +798,6 @@ def SRC_top(dataset, N_train, lambda1, verbose = False, show_progress = False):
 
     return acc
 
-def build_mean_matrix(X, cols = None):
-    if X.shape[1] == 0:
-        return X
-    m = np.mean(X, axis = 1)
-    if cols == None:
-        return repmat(m, 1, X.shape[1])
-    else:
-        return np.tile(m, 1, cols)
-
-def build_mean_matrix_test():
-    print '----------------------------------'
-    print '`build_mean_matrix` test: '
-    X = np.random.randint(5, size = (2, 3))
-    M = build_mean_matrix(X)
-    print X , '\n', M
 
 # build_mean_matrix_test()
 
@@ -842,7 +827,7 @@ def buildMhat(M, range_row, range_col):
             http://www.personal.psu.edu/thv102/
     ---------------------------------------------
     """
-    C = range_row.size - 1
+    C = len(range_row) - 1
     M2 = M.copy()
     for c in xrange(C):
         M2[range_row[c]: range_row[c+1], range_col[c]: range_col[c+1]] *= 2
@@ -872,6 +857,15 @@ def buildM_2Mbar(X, Y_range, lambda2):
         MM[:, Y_range[c]: Y_range[c+1]] = \
             repmat(lambda2*(m - 2*mc), 1, Y_range[c+1] - Y_range[c])
     return MM
+
+def build_mean_matrix(X, cols = None):
+    if X.shape[1] == 0:
+        return X
+    m = np.mean(X, axis = 1)
+    if cols == None:
+        return repmat(m, 1, X.shape[1])
+    else:
+        return np.tile(m, 1, cols)
 
 def buildMean(X):
     return build_mean_matrix(X)

@@ -121,7 +121,6 @@ class COPAR(object):
         cost = self.lambd*utils.norm1(self.X)
         cost1 = utils.normF2(self.Y - np.dot(self.D, self.X))
         DCp1 = self._getDc(self.nclass)
-        # DCp1_range = range(self.D_range_ext[-2], self.D_range_ext[-1])
         for c in range(self.nclass):
             Dc = self._getDc(c)
             Yc = self._getYc(c)

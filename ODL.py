@@ -8,26 +8,25 @@ class ODL(object):
     Solving the optimization problem:
         (D, X) = arg min_{D, X} 0.5||Y - DX||_F^2 + lamb||X||_1
     """
-    def __init__(self, lambd = 0.001, updateD_iters = 100, updateX_iters = 100):
+    def __init__(self, k, lambd = 0.001, updateD_iters = 100, updateX_iters = 100):
         self.lambd = lambd
+        self.k = k
         self.Y = None
         self.D = None
         self.X = None
         self.updateD_iters = updateD_iters
         self.updateX_iters = updateX_iters
 
-    def fit(self, Y, k = None, iterations = 100, verbose = False):
+    def fit(self, Y, iterations = 100, verbose = False):
         """
         Y: numpy data [n_features, n_samples]
         k: interger: number of atoms in the dictionary
             if k is None, select k = round(0.2*n_samples)
         """
-        if k is None:
-            k = int(0.2*Y.shape[1])
         self.Y = Y
         del Y
         Y_range = np.array([0, self.Y.shape[1]])
-        D_range = np.array([0, k])
+        D_range = np.array([0, self.k])
         self.D = utils.pickDfromY(self.Y, Y_range, D_range)
         self.X = np.zeros((self.D.shape[1], self.Y.shape[1]))
         for it in range(iterations):
@@ -53,8 +52,8 @@ def _test_unit():
     N = 500
     k = 200
     Y = utils.normc(np.random.randn(d, N))
-    clf = ODL(lambd = 0.01)
-    clf.fit(Y, k, verbose = True, iterations = 100)
+    clf = ODL(k, lambd = 0.01)
+    clf.fit(Y, verbose = True, iterations = 100)
     # print(clf.X)
 
 if __name__ == '__main__':
