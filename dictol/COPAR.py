@@ -234,9 +234,8 @@ class COPAR(object):
 
 
 def mini_test_unit():
-    print('===================================================================')
+    print('\n===================================================================')
     print('Mini Unit test: COPAR')
-    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 5
     dataset, Y_train, Y_test, label_train, label_test = \
@@ -246,9 +245,8 @@ def mini_test_unit():
     clf.evaluate(Y_test, label_test)
 
 def test_unit():
-    print('===================================================================')
+    print('\n===================================================================')
     print('Mini Unit test: COPAR')
-    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 15
     dataset, Y_train, Y_test, label_train, label_test = \

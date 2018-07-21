@@ -295,9 +295,8 @@ class LRSDL(object):
 
 
 def mini_test_unit():
-    print('===================================================================')
+    print('\n===================================================================')
     print('Mini Unit test: Low-rank shared Dictionary Learning')
-    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 5
     dataset, Y_train, Y_test, label_train, label_test = \
@@ -307,9 +306,8 @@ def mini_test_unit():
     clf.evaluate(Y_test, label_test)
 
 def mini_test_unit_FDDL():
-    print('===================================================================')
+    print('\n===================================================================')
     print('Mini Unit test: Fisher Disrciminant Dicationary Learning')
-    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 5
     dataset, Y_train, Y_test, label_train, label_test = \
@@ -319,9 +317,8 @@ def mini_test_unit_FDDL():
     clf.evaluate(Y_test, label_test)
 
 def test_unit_FDDL():
-    print('===================================================================')
+    print('\n===================================================================')
     print('Unit test: Fisher Disrciminant Dicationary Learning')
-    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 30
     dataset, Y_train, Y_test, label_train, label_test = \
@@ -331,9 +328,8 @@ def test_unit_FDDL():
     clf.evaluate(Y_test, label_test)
 
 def test_unit():
-    print('===================================================================')
+    print('\n===================================================================')
     print('Unit test: Low-rank shared Dictionary Learning')
-    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 30
     dataset, Y_train, Y_test, label_train, label_test = \

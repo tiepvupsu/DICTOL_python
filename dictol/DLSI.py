@@ -114,27 +114,25 @@ def mini_test_unit():
     """
     mini test on simulated data
     """
-    print('===================================================================')
+    print('\n===================================================================')
     print('Mini Unit test: DLSI')
-    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 5
     dataset, Y_train, Y_test, label_train, label_test = \
            utils.train_test_split(dataset, N_train)
-    clf = DLSI(k = 4, lambd = 0.001, eta = 0.001)
+    clf = DLSI(k = 5, lambd = 0.001, eta = 0.001)
     clf.fit(Y_train, label_train, iterations = 100, verbose = True)
     clf.evaluate(Y_test, label_test)
 
 
 def test_unit():
-    print('===================================================================')
+    print('\n===================================================================')
     print('Unit test: DLSI')
-    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 15
     dataset, Y_train, Y_test, label_train, label_test = \
            utils.train_test_split(dataset, N_train)
-    clf = DLSI(k = 10, lambd = 0.001, eta = 0.01)
+    clf = DLSI(k = 10, lambd = 0.001, eta = 0.001)
     clf.fit(Y_train, label_train, iterations = 100, verbose = True)
     clf.evaluate(Y_test, label_test)
 
