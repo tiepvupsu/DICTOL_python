@@ -1,26 +1,26 @@
 from __future__ import print_function
 import utils, optimize
-import sparse_coding
 import numpy as np
 # from numpy import linalg as LA
 from ODL import ODL
 
 class DLSI(object):
-    def __init__(self, lambd = 0.01, eta = 0.01, updateD_iters = 100, updateX_iters = 100):
+    def __init__(self, k = 10, lambd = 0.01, eta = 0.01, updateD_iters = 100, updateX_iters = 100):
         self.lambd = 0.01
         self.eta = 0.01
         self.D = None
         self.X = None
         self.Y = None
+        self.k = k
         self.updateD_iters = updateD_iters
         self.updateX_iters = updateX_iters
 
-    def fit(self, Y, label_train, k, iterations = 100, verbose = False, show_after = 10):
+    def fit(self, Y, label_train, iterations = 100, verbose = False, show_after = 10):
         self.Y = Y
         del Y
         self.Y_range = utils.label_to_range(label_train)
         self.nclass = self.Y_range.size - 1
-        self.D_range = k*np.arange(self.nclass + 1)
+        self.D_range = [self.k * i for i in range(self.nclass + 1)]
         self.D = np.zeros((self.Y.shape[0], self.D_range[-1]))
         self.X = []
         for c in range(self.nclass):
@@ -51,16 +51,15 @@ class DLSI(object):
     def _initialize(self):
         for c in range(self.nclass):
             Yc = utils.get_block_col(self.Y, c, self.Y_range)
-            clf = ODL(self.lambd)
-            clf.fit(Yc, self.D_range[c+1] - self.D_range[c])
-            # import pdb
-            # pdb.set_trace()
+            clf = ODL(k = self.D_range[c+1] - self.D_range[c], lambd = self.lambd)
+            clf.fit(Yc)
             self.D[:, self.D_range[c]: self.D_range[c+1]] = clf.D
             self.X[c] = clf.X
 
     def _updateXc(self, c):
-        lasso = sparse_coding.Lasso(self._getDc(c), self.lambd)
-        self.X[c] = lasso.solve(self._getYc(c), Xinit = self.X[c])
+        lasso = optimize.Lasso(self._getDc(c), self.lambd)
+        self.X[c] = lasso.fit(self._getYc(c), Xinit = self.X[c])
+        self.X[c] = lasso.coef_
 
     def _updateX(self):
         for c in range(self.nclass):
@@ -96,8 +95,9 @@ class DLSI(object):
         E = np.zeros((self.nclass, Y.shape[1]))
         for c in range(self.nclass):
             Dc = self._getDc(c)
-            lasso = sparse_coding.Lasso(Dc, self.lambd)
-            Xc = lasso.solve(Y)
+            lasso = optimize.Lasso(Dc, self.lambd)
+            lasso.fit(Y)
+            Xc = lasso.coef_
             R1 = Y - np.dot(Dc, Xc)
             E[c, :] = 0.5*(R1*R1).sum(axis = 0) + self.lambd*abs(Xc).sum(axis = 0)
         return np.argmin(E, axis = 0) + 1
@@ -110,14 +110,35 @@ class DLSI(object):
         return acc
 
 
-def _test_unit():
+def mini_test_unit():
+    """
+    mini test on simulated data
+    """
+    print('===================================================================')
+    print('Mini Unit test: DLSI')
+    print('===================================================================')
+    dataset = 'myYaleB'
+    N_train = 5
+    dataset, Y_train, Y_test, label_train, label_test = \
+           utils.train_test_split(dataset, N_train)
+    clf = DLSI(k = 4, lambd = 0.001, eta = 0.001)
+    clf.fit(Y_train, label_train, iterations = 100, verbose = True)
+    clf.evaluate(Y_test, label_test)
+
+
+def test_unit():
+    print('===================================================================')
+    print('Unit test: DLSI')
+    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 15
     dataset, Y_train, Y_test, label_train, label_test = \
            utils.train_test_split(dataset, N_train)
-    clf = DLSI(lambd = 0.001, eta = 0.01)
-    clf.fit(Y_train, label_train, k = 10, iterations = 100, verbose = True)
+    clf = DLSI(k = 10, lambd = 0.001, eta = 0.01)
+    clf.fit(Y_train, label_train, iterations = 100, verbose = True)
     clf.evaluate(Y_test, label_test)
 
+
 if __name__ == '__main__':
-    _test_unit()
+    mini_test_unit()
+    # test_unit()

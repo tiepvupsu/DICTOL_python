@@ -1,6 +1,6 @@
 from __future__ import print_function
 import utils
-from sparse_coding import Lasso
+from optimize import Lasso
 import numpy as np
 
 
@@ -14,7 +14,9 @@ class SRC(object):
         self.C = self.train_range.size - 1
 
     def predict(self, Y, verbose = True, iterations = 100):
-        X = Lasso(self.D, self.lamb).solve(Y, iterations = 100)
+        lasso = Lasso(self.D, self.lamb)
+        lasso.fit(Y, iterations = iterations)
+        X = lasso.coef_
         E = np.zeros((self.C, Y.shape[1]))
         for i in range(self.C):
             Xi = utils.get_block_row(X, i, self.train_range)
@@ -30,14 +32,30 @@ class SRC(object):
        return acc
 
 
-def test_src():
+def mini_test_unit():
+    print('===================================================================')
+    print('Mini Unit test: Sparse Representation-based Classification (SRC)')
+    print('===================================================================')
     dataset = 'myYaleB'
-    N_train = 10
+    N_train = 5
     dataset, Y_train, Y_test, label_train, label_test = \
            utils.train_test_split(dataset, N_train)
     clf = SRC(lamb = 0.01)
     clf.fit(Y_train, label_train)
     clf.evaluate(Y_test, label_test)
 
+def test_unit():
+    print('===================================================================')
+    print('Unit test: Sparse Representation-based Classification (SRC)')
+    print('===================================================================')
+    dataset = 'myYaleB'
+    N_train = 15
+    dataset, Y_train, Y_test, label_train, label_test = \
+           utils.train_test_split(dataset, N_train)
+    clf = SRC(lamb = 0.01)
+    clf.fit(Y_train, label_train)
+    clf.evaluate(Y_test, label_test)
+
+
 if __name__ == '__main__':
-    test_src()
+    test_unit()

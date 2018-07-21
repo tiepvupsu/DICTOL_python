@@ -2,7 +2,6 @@ from __future__ import print_function
 import utils, optimize
 import numpy as np
 from ODL import ODL
-# import pdb
 
 class UpdateXc(optimize.Fista):
     """
@@ -36,7 +35,7 @@ class UpdateXc(optimize.Fista):
         self.c = -1
         self.DCp1 = utils.get_block_col(D, self.nclass, self.D_range_ext)
 
-    def fit(self, c):
+    def set_class(self, c):
         self.c = c
         self.Yc = utils.get_block_col(self.Y, c, self.Y_range)
         self.Dc = utils.get_block_col(self.D, c, self.D_range_ext)
@@ -88,7 +87,9 @@ class UpdateXc(optimize.Fista):
 
 
 class COPAR(object):
-    def __init__(self, lambd = 0.01, eta = 0.0001, updateX_iters = 100, updateD_iters = 100):
+    def __init__(self, k, k0, lambd = 0.01, eta = 0.0001, updateX_iters = 100, updateD_iters = 100):
+        self.k = k
+        self.k0 = k0
         self.lambd = lambd
         self.eta = eta
         self.D = None
@@ -138,15 +139,13 @@ class COPAR(object):
                 self.D_range_ext, self.D_range_ext))
         return cost
 
-    def fit(self, Y, label_train, k, k0, iterations = 100, verbose = False, show_after = 5):
-        self.k = k
-        self.k0 = k0
+    def fit(self, Y, label_train, iterations = 100, verbose = False, show_after = 5):
         self.Y = Y
         del Y
         self.Y_range = utils.label_to_range(label_train)
         self.nclass = self.Y_range.size - 1
-        D_range = [k*i for i in range(self.nclass+1)]
-        self.D_range_ext = D_range + [k*self.nclass + k0]
+        D_range = [self.k*i for i in range(self.nclass+1)]
+        self.D_range_ext = D_range + [self.k*self.nclass + self.k0]
         # init
         if verbose:
             print('initializing ... ')
@@ -164,20 +163,21 @@ class COPAR(object):
         self.D = np.zeros((self.Y.shape[0], self.D_range_ext[-1]))
         self.X = np.zeros((self.D_range_ext[-1], self.Y.shape[1]))
         for c in range(self.nclass):
-            clf = ODL(lambd = self.lambd)
-            clf.fit(self._getYc(c), self.k)
+            clf = ODL(k = self.k, lambd = self.lambd)
+            clf.fit(self._getYc(c))
             self.D[:, self.D_range_ext[c]:self.D_range_ext[c+1]] = clf.D
             self.X[self.D_range_ext[c]:self.D_range_ext[c+1], \
                    self.Y_range[c]:self.Y_range[c+1]] = clf.X
         if self.k0 > 0:
-            clf.fit(self.Y, self.k0)
+            clf = ODL(k = self.k0, lambd = self.lambd)
+            clf.fit(self.Y)
             self.D[:, self.D_range_ext[-2]:self.D_range_ext[-1]] = clf.D
             self.X[self.D_range_ext[-2]:self.D_range_ext[-1]]
 
     def _updateX(self):
         updatxc = UpdateXc(self.D, self.D_range_ext, self.Y, self.Y_range, self.lambd, iterations = 100)
         for c in range(self.nclass):
-            updatxc.fit(c)
+            updatxc.set_class(c)
             Xc = utils.get_block_col(self.X, c, self.Y_range)
             # updatxc.check_grad(Xc)
             self.X[:, self.Y_range[c]: self.Y_range[c+1]] = \
@@ -233,14 +233,30 @@ class COPAR(object):
         return acc
 
 
-def _test_unit():
+def mini_test_unit():
+    print('===================================================================')
+    print('Mini Unit test: COPAR')
+    print('===================================================================')
+    dataset = 'myYaleB'
+    N_train = 5
+    dataset, Y_train, Y_test, label_train, label_test = \
+           utils.train_test_split(dataset, N_train)
+    clf = COPAR(k = 4, k0 = 5, lambd = 0.001, eta = 0.01)
+    clf.fit(Y_train, label_train, iterations = 30, verbose = True)
+    clf.evaluate(Y_test, label_test)
+
+def test_unit():
+    print('===================================================================')
+    print('Mini Unit test: COPAR')
+    print('===================================================================')
     dataset = 'myYaleB'
     N_train = 15
     dataset, Y_train, Y_test, label_train, label_test = \
            utils.train_test_split(dataset, N_train)
-    clf = COPAR(lambd = 0.001, eta = 0.01)
-    clf.fit(Y_train, label_train, k = 10, k0 = 5, iterations = 10, verbose = True)
+    clf = COPAR(k = 10, k0 = 5, lambd = 0.001, eta = 0.01)
+    clf.fit(Y_train, label_train, iterations = 100, verbose = True)
     clf.evaluate(Y_test, label_test)
 
 if __name__ == '__main__':
-    _test_unit()
+    mini_test_unit()
+    # test_unit()

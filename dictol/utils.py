@@ -732,7 +732,7 @@ def build_mean_vector(X, Y_range):
 
 def train_test_split(dataset, N_train):
     if dataset == 'myARgender':
-        fn = os.path.join('data', 'myARgender.pickle')
+        fn = os.path.join('../data', 'myARgender.pickle')
         Vars = myload(fn)
         Y_train     = Vars['Y_train']
         Y_test      = Vars['Y_test']
@@ -749,7 +749,7 @@ def train_test_split(dataset, N_train):
         Y_test  = normc(Y_test)
 
     elif dataset == 'myARreduce':
-        fn = os.path.join('data', 'AR_EigenFace.pickle')
+        fn = os.path.join('../data', 'AR_EigenFace.pickle')
         Vars = myload(fn)
 
         Y_train     = normc(Vars['tr_dat'])
@@ -759,7 +759,7 @@ def train_test_split(dataset, N_train):
 
     elif dataset == 'myFlower':
         dataset = 'myFlower102'
-        fn      = os.path.join('data', dataset + '.pickle')
+        fn      = os.path.join('../data', dataset + '.pickle')
         Vars    = myload(fn)
 
         Y_train     = Vars['Y_train']
@@ -859,7 +859,17 @@ def buildM_2Mbar(X, Y_range, lambda2):
     return MM
 
 def build_mean_matrix(X, cols = None):
-    if X.shape[1] == 0:
+    """
+    repeat np.mean(X, axis = 1) cols times.
+
+    ---------------
+    Parameters:
+    X: 2d numpy array
+    cols: int
+        if cols == None then cols = #cols of X
+
+    """
+    if len(X.shape) < 2 or X.shape[1] == 0:
         return X
     m = np.mean(X, axis = 1)
     if cols == None:

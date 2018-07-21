@@ -266,10 +266,14 @@ class Lasso(Fista):
         self.Y = None
         self.DtY = None
         self.L = np.max(LA.eig(self.DtD)[0])
+        self.coef_ = None
 
-    def fit(self, Y):
+    def fit(self, Y, Xinit = None, iterations = 100):
         self.Y = Y
         self.DtY = np.dot(self.D.T, self.Y)
+        if Xinit is None:
+            Xinit = np.zeros((self.D.shape[1], self.Y.shape[1]))
+        self.coef_ = self.solve(Xinit = Xinit, iterations = iterations)
 
     def _grad(self, X):
         return np.dot(self.DtD, X) - self.DtY

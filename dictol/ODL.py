@@ -32,8 +32,8 @@ class ODL(object):
         for it in range(iterations):
             # update X
             lasso = optimize.Lasso(self.D, self.lambd)
-            lasso.fit(self.Y)
-            self.X = lasso.solve(self.X)
+            lasso.fit(self.Y, Xinit = self.X)
+            self.X = lasso.coef_
             # update D
             F = np.dot(self.X, self.X.T)
             E = np.dot(self.Y, self.X.T)
@@ -47,14 +47,17 @@ class ODL(object):
         return l
 
 
-def _test_unit():
-    d = 100
-    N = 500
-    k = 200
+def test_unit():
+    print('===========================================================')
+    print('Unit test: Online Dictionary Learning (ODL)')
+    print('===========================================================')
+    d = 10
+    N = 50
+    k = 20
     Y = utils.normc(np.random.randn(d, N))
     clf = ODL(k, lambd = 0.01)
-    clf.fit(Y, verbose = True, iterations = 100)
-    # print(clf.X)
+    clf.fit(Y, verbose = True, iterations = 50)
+
 
 if __name__ == '__main__':
-    _test_unit()
+    test_unit()
