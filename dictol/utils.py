@@ -953,17 +953,18 @@ def inv_IpXY(X, Y):
     d1 = X.shape[0]
     d2 = X.shape[1]
     if d1 > d2:
-        M = eye(d1) - np.dot(np.dot(X, LA.inv(eye(d2) + np.dot(Y, X))), Y)
+        M = np.eye(d1) - np.dot(np.dot(X, LA.inv(np.eye(d2) + np.dot(Y, X))), Y)
     else:
-        M = LA.inv(eye(d1) + np.dot(X, Y))
+        M = LA.inv(np.eye(d1) + np.dot(X, Y))
     return M
+
 def inv_IpXY_test():
     d1 = 1000
     d2 = 10
     X = np.random.rand(d1, d2)
     Y = np.random.rand(d2, d1)
     t1 = time.time()
-    A = LA.inv(eye(d1)+ np.dot(X,Y))
+    A = LA.inv(np.eye(d1)+ np.dot(X,Y))
     t2 = time.time()
     print 't1 = ', t2 - t1
     #

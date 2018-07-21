@@ -105,7 +105,7 @@ class DLSI(object):
     def evaluate(self, Y_test, label_test, metrics = ['accuracy']):
         print('evaluating...')
         pred = self.predict(Y_test)
-        acc = np.sum(pred == label_test)/float(utils.numel(label_test))
+        acc = np.sum(pred == label_test)/float(label_test.size)
         print('accuracy = %.2f'%(100*acc))
         return acc
 
@@ -121,7 +121,7 @@ def mini_test_unit():
     dataset, Y_train, Y_test, label_train, label_test = \
            utils.train_test_split(dataset, N_train)
     clf = DLSI(k = 5, lambd = 0.001, eta = 0.001)
-    clf.fit(Y_train, label_train, iterations = 100, verbose = True)
+    clf.fit(Y_train, label_train, iterations = 10, verbose = True)
     clf.evaluate(Y_test, label_test)
 
 

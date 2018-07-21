@@ -29,16 +29,13 @@ def ODL_updateD(D, E, F, iterations = 100, tol = 1e-8):
 
     D_old = D.copy()
     it = 0
-    sizeD = utils.numel(D)
-    # print opts.tol
-    # while it < opts.max_iter:
     for it in range(iterations):
         for i in xrange(D.shape[1]):
             if F[i,i] != 0:
                 a = 1.0/F[i,i] * (E[:, i] - D.dot(F[:, i])) + D[:, i]
                 D[:,i] = a/max(LA.norm(a, 2), 1)
 
-        if LA.norm(D - D_old, 'fro')/sizeD < tol:
+        if LA.norm(D - D_old, 'fro')/D.size < tol:
             break
         D_old = D.copy()
     return D

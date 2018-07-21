@@ -228,7 +228,7 @@ class COPAR(object):
     def evaluate(self, Y_test, label_test, metrics = ['accuracy']):
         print('evaluating...')
         pred = self.predict(Y_test)
-        acc = np.sum(pred == label_test)/float(utils.numel(label_test))
+        acc = np.sum(pred == label_test)/float(label_test.size)
         print('accuracy = %.2f'%(100*acc))
         return acc
 
