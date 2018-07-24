@@ -82,8 +82,7 @@ class _UpdateXX0(optimize.Fista):
 
     def _discriminative(self, X):
         """
-        * Syntax: cost = FDDL_discriminative(X, Y_range)
-        * calculating the discriminative term in FDDL[[4]](#fn_fdd):
+        * calculating the discriminative term in
         * $\|X\|_F^2 + \sum_{c=1}^C (\|Xc - Mc\|_F^2 - \|Mc - M\|_F^2) $
         """
         cost = normF2(X)
@@ -175,13 +174,8 @@ class LRSDL(object):
 
     def _buildYhat(self):
         """
-        Yhat = LRSD_buildYhat(Y, Y_range, D, D_range, X)
         Yhat = [Yhat_1, Yhat_2, ..., Yhat_C]
         where Yhat_c = Yc - Dc*Xcc
-        ---------------------------------------------
-        Author: Tiep Vu, thv102@psu.edu, 04/22/2016
-                http://www.personal.psu.edu/thv102/
-        ---------------------------------------------
         """
         Yhat = np.zeros_like(self.Y)
         for c in xrange(self.nclass):
@@ -213,7 +207,7 @@ class LRSDL(object):
 
     def _fidelity(self):
         """
-        * Calculating the fidelity term in FDDL[[4]](#fn_fdd):
+        * Calculating the fidelity term in FDDL
         * $\sum_{c=1}^C \Big(\|Y_c - D_cX^c_c\|_F^2 +
             \sum_{i \neq c} \|D_c X^c_i\|_F^2\Big)$
         """
@@ -238,7 +232,6 @@ class LRSDL(object):
 
     def _discriminative(self):
         """
-        * Syntax: cost = FDDL_discriminative(X, Y_range)
         * calculating the discriminative term in FDDL[[4]](#fn_fdd):
         * $\|X\|_F^2 + \sum_{c=1}^C (\|Xc - Mc\|_F^2 - \|Mc - M\|_F^2) $
         """
