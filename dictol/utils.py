@@ -1,7 +1,3 @@
-# import numpy as np
-# from numpy import linalg as LA
-# import scipy.io as sio
-# import cPickle
 import math
 # import sys
 import time
