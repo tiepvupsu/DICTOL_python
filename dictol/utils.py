@@ -8,6 +8,7 @@ import numpy.linalg as LA
 import os
 # import io
 import scipy.io as sio
+import pkg_resources
 # import pickle
 # from ODL import *
 test = True
@@ -403,14 +404,12 @@ def pickDfromY_test():
 
 
 def myload(filename):
-    print filename
-    A = sio.loadmat(filename)
-    return A
+    return sio.loadmat(filename)
 
 
 def pickTrainTest(dataset, N_train_c):
-    data_fn = os.path.join('data', dataset + '.pickle')
-    data_fn = os.path.join('data', dataset + '.mat')
+    data_fn = pkg_resources.resource_filename('dictol', 'data/'+dataset + '.mat') 
+    # data_fn = os.path.join('dictol/data', dataset + '.mat')
     Vars = myload(data_fn)
     Y = Vars['Y']
     d = Y.shape[0]
@@ -477,7 +476,6 @@ def build_mean_vector(X, Y_range):
     where mi = mean(X_i)
     """
     C = Y_range.size -1
-    # import pdb; pdb.set_trace()  # breakpoint 750a8d83 //
     M = np.zeros((X.shape[0], C))
     for c in xrange(C):
         Xc = get_block_col(X, c, Y_range)
@@ -486,7 +484,8 @@ def build_mean_vector(X, Y_range):
 
 def train_test_split(dataset, N_train):
     if dataset == 'myARgender':
-        fn = os.path.join('../data', 'myARgender.pickle')
+        fn = pkg_resources.resource_filename('dictol', 'data/'+dataset + '.mat') 
+        # fn = os.path.join('data', 'myARgender.pickle')
         Vars = myload(fn)
         Y_train     = Vars['Y_train']
         Y_test      = Vars['Y_test']
@@ -503,7 +502,7 @@ def train_test_split(dataset, N_train):
         Y_test  = normc(Y_test)
 
     elif dataset == 'myARreduce':
-        fn = os.path.join('../data', 'AR_EigenFace.pickle')
+        fn = os.path.join('data', 'AR_EigenFace.pickle')
         Vars = myload(fn)
 
         Y_train     = normc(Vars['tr_dat'])
@@ -513,7 +512,7 @@ def train_test_split(dataset, N_train):
 
     elif dataset == 'myFlower':
         dataset = 'myFlower102'
-        fn      = os.path.join('../data', dataset + '.pickle')
+        fn      = os.path.join('data', dataset + '.pickle')
         Vars    = myload(fn)
 
         Y_train     = Vars['Y_train']

@@ -1,3 +1,7 @@
 /results
 *.pyc
 *.fuse_hidden*
+MANIFEST.in
+setup.py
+dist/
+dictol.egg-infor/

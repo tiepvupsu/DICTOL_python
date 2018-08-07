@@ -1,6 +1,6 @@
 
 # DICTOL - A Discriminative dictionary Learning Toolbox for Classification (Python 2.7 version).
-_This Toolbox is a part of our [LRSDL project](http://signal.ee.psu.edu/lrsdl.html)._
+_This repo is a part of our [LRSDL project](http://signal.ee.psu.edu/lrsdl.html)._
 
 **Related publications:**
 
@@ -22,19 +22,23 @@ For more information, please see its corresponding [**MATLAB version**](https://
 2. scipy 
 
 
+# Installation 
+```
+pip install dictol
+```
 # Demo 
 
-Run:
 ```
-python demo.py
+import dictol
+dictol.demo()
 ```
 
-from your command line. 
+
 
 # Contact information
 ```
 Tiep Vu: 
-    + thv102@psu.edu
+    + vuhuutiep@gmail.com 
     + http://www.personal.psu.edu/thv102/
 ```
 
