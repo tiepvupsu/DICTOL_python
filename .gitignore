@@ -4,4 +4,4 @@
 MANIFEST.in
 setup.py
 dist/
-dictol.egg-infor/
+dictol.egg-info/
