@@ -5,3 +5,4 @@ MANIFEST.in
 setup.py
 dist/
 dictol.egg-info/
+build/
