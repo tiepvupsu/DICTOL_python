@@ -3,7 +3,7 @@ def demo():
     # mini test: 5 training samples per class
     SRC.mini_test_unit()
     # DLSI.mini_test_unit()
-    # COPAR.mini_test_unit()
+    COPAR.mini_test_unit()
     # LRSDL.mini_test_unit_FDDL()
     # LRSDL.mini_test_unit()
 

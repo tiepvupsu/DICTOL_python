@@ -23,16 +23,26 @@ def vec(A):
 
 
 def myreshape(x, c, r):
+    # TODO: remove this function?
     return x.reshape(c, r, order='F').copy()
 
 
 def label_to_range(label):
     """
-    * Convert from Labels to Ranges
-    * Example: if `label = [1 1 1 2 2 2 2 3 3]`, then `range = [0, 3, 7, 9]`.
-    * Syntax: `arange = label_to_range(label)`
-        - `label`: a numpy array
-        - `arange`: a numpy array
+    Convert label to range
+
+    Parameters:
+    -----------
+    label: list of integers
+        must be in the form of [1, 1, ..., 1, 2, 2, ..., 2, ..., C, C, ..., C]
+        i.e. nondecreasing numbers starting from 1, each element is greater
+        than the previous element by at most 1
+
+    Returns:
+    --------
+    a list of intergers with C + 1 elements, start with 0
+    the i-th element is number of elements in label that equals to i
+        
     """
     res = [0]
     assert label[0] == 1, 'label must start with 1'
@@ -44,23 +54,37 @@ def label_to_range(label):
         else:
             assert False,\
                 ('label[{}] and label[{}] must be equal or two consecutive '
-                 'integers, got {} and {}').format(i-1, i, label[i-1], label[i])
+                 'integers, got {} and {}').format(
+                     i-1, i, label[i-1], label[i]
+                 )
     res.append(len(label))
     return res
 
 
-def range_to_label(arange):
+def range_to_label(a_range):
     """
-    * Convert from Ranges to Labels
-    * Example: if `range = [0, 3, 5]`` then `label = [1 1 1 2 2]``
-    * Syntax: `label = range_to_label(range)`
+    From a range, convert it to label
+
+    This is an inverse function of label_to_range
+    Parameters:
+    -----------
+    a_range: list of integers
+        must start with 0 and is a strictly increasing list
+
+    Returns:
+    --------
+
     """
-    # pass
-    C = arange.size - 1
-    label = np.ones((arange[-1], ), dtype=np.int)
-    for i in range(1, C):
-        label[arange[i]: arange[i+1]] *= (i+1)
-    return label
+    assert a_range[0] == 0, 'input must start with 0'
+    res = []
+    for i in range(1, len(a_range)):
+        assert a_range[i] > a_range[i-1],\
+            ('a_range must be an increasing list, '
+             'got a_range[{}] = {} < a_range[{}] = {}').format(
+                i, a_range[i], i - 1, a_range[i-1]
+            )
+        res.extend([i]*(a_range[i] - a_range[i-1]))
+    return res
 
 
 def get_block_col(M, C, col_range):

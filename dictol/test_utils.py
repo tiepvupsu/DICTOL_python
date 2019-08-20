@@ -8,27 +8,35 @@ class TestLabelToRange(object):
         label = [1, 1, 1, 2, 2, 2, 2, 3, 3]
         got_range = utils.label_to_range(label)
         expected_range = [0, 3, 7, 9]
-        np.testing.assert_array_equal(expected_range, got_range)
+        assert_eq(expected_range, got_range)
 
     def test_2(self):
         label = [1, 2, 3]
         got_range = utils.label_to_range(label)
         expected_range = [0, 1, 2, 3]
-        np.testing.assert_array_equal(expected_range, got_range)
+        assert_eq(expected_range, got_range)
 
     def test_raise_if_not_consecutive_1(self):
+        # raise error if incorrect input format
         pass
-        # label = [0, 0, 1, 1]
 
 
+class TestRangeToLabel(object):
+    def test_1(self):
+        a_range = [0, 3, 5, 9]
+        label = utils.range_to_label(a_range)
+        expected_label = [1, 1, 1, 2, 2, 3, 3, 3, 3]
+        assert_eq(expected_label, label)
 
+    def test_2(self):
+        a_range = [0, 1]
+        label = utils.range_to_label(a_range)
+        expected_label = [1]
+        assert_eq(expected_label, label)
 
-
-def test_range_to_label():
-    arange = np.array([0, 3, 5, 9])
-    label = utils.range_to_label(arange)
-    expected_label = np.array([1, 1, 1, 2, 2, 3, 3, 3, 3])
-    np.testing.assert_array_equal(expected_label, label)
+    def test_3(self):
+        # raise error if incorrect input format
+        pass
 
 
 def test_get_block_col():
