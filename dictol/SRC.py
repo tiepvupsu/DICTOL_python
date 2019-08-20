@@ -10,8 +10,9 @@ class SRC(object):
 
     def fit(self, Y_train, label_train):
         self.D = Y_train
-        self.train_range = utils.label_to_range(label_train)
-        self.C = self.train_range.size - 1
+        self.train_range = list(utils.label_to_range(label_train))
+        # self.C = self.train_range.size - 1
+        self.C = len(self.train_range) - 1
 
     def predict(self, Y, verbose = True, iterations = 100):
         lasso = Lasso(self.D, self.lamb)
@@ -27,8 +28,8 @@ class SRC(object):
 
     def evaluate(self, Y_test, label_test):
        pred = self.predict(Y_test)
-       acc = np.sum(pred == label_test)/float(label_test.size)
-       print('accuracy = %.2f'%(100*acc))
+       acc = np.sum(pred == label_test)/float(len(label_test))
+       print('accuracy = {:.2f} %'.format(100*acc))
        return acc
 
 

@@ -1,0 +1,225 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+COPAR	dictol/COPAR.py	/^class COPAR(object):$/;"	c
+COPAR	dictol/__init__.py	/^    from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+COPAR	main.py	/^from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+DLSI	dictol/DLSI.py	/^class DLSI(object):$/;"	c
+DLSI	dictol/__init__.py	/^    from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+DLSI	main.py	/^from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+DLSI_updateD	dictol/optimize.py	/^def DLSI_updateD(D, E, F, A, lambda1, verbose = False, iterations = 100):$/;"	f
+Fista	dictol/optimize.py	/^class Fista(object):$/;"	c
+LA	dictol/matlab_syntax.py	/^from numpy import linalg as LA$/;"	i
+LA	dictol/optimize.py	/^from numpy import linalg as LA$/;"	i
+LA	dictol/utils.py	/^import numpy.linalg as LA$/;"	i
+LRSDL	dictol/LRSDL.py	/^class LRSDL(object):$/;"	c
+LRSDL	dictol/__init__.py	/^    from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+LRSDL	main.py	/^from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+Lasso	dictol/SRC.py	/^from .optimize import Lasso$/;"	i
+Lasso	dictol/optimize.py	/^class Lasso(Fista):$/;"	c
+MyForm	dictol/utils.py	/^class MyForm:$/;"	c
+MyForm_test	dictol/utils.py	/^def MyForm_test():$/;"	f
+ODL	dictol/COPAR.py	/^from .ODL import ODL$/;"	i
+ODL	dictol/DLSI.py	/^from .ODL import ODL$/;"	i
+ODL	dictol/LRSDL.py	/^from .ODL import ODL$/;"	i
+ODL	dictol/ODL.py	/^class ODL(object):$/;"	c
+ODL	dictol/__init__.py	/^    from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+ODL	main.py	/^from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+ODL_updateD	dictol/optimize.py	/^def ODL_updateD(D, E, F, iterations = 100, tol = 1e-8):$/;"	f
+SRC	dictol/SRC.py	/^class SRC(object):$/;"	c
+SRC	dictol/__init__.py	/^    from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+SRC	main.py	/^from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+UpdateXc	dictol/COPAR.py	/^class UpdateXc(optimize.Fista):$/;"	c
+_UpdateXX0	dictol/LRSDL.py	/^class _UpdateXX0(optimize.Fista):$/;"	c
+__init__	dictol/COPAR.py	/^    def __init__(self, D, D_range_ext, Y, Y_range, lambd, iterations = 100):$/;"	m	class:UpdateXc
+__init__	dictol/COPAR.py	/^    def __init__(self, k, k0, lambd = 0.01, eta = 0.0001, updateX_iters = 100, updateD_iters = 100):$/;"	m	class:COPAR
+__init__	dictol/DLSI.py	/^    def __init__(self, k = 10, lambd = 0.01, eta = 0.01, updateD_iters = 100, updateX_iters = 100):$/;"	m	class:DLSI
+__init__	dictol/LRSDL.py	/^    def __init__(self, Y, Y_range, D, D_range, D0, k0, lambd = 0.01, lambd2 = 0.01):$/;"	m	class:_UpdateXX0
+__init__	dictol/LRSDL.py	/^    def __init__(self, lambd = 0.01, lambd2 = 0.01, eta = 0.0001,$/;"	m	class:LRSDL
+__init__	dictol/ODL.py	/^    def __init__(self, k, lambd = 0.001, updateD_iters = 100, updateX_iters = 100):$/;"	m	class:ODL
+__init__	dictol/SRC.py	/^    def __init__(self, lamb = 0.01):$/;"	m	class:SRC
+__init__	dictol/optimize.py	/^    def __init__(self):$/;"	m	class:Fista
+__init__	dictol/optimize.py	/^    def __init__(self, D, lambd = .1):$/;"	m	class:Lasso
+__init__	dictol/utils.py	/^    def __init__(self, M, N, k):$/;"	m	class:MyForm
+__version__	dictol/__init__.py	/^__version__ = '0.0.7'$/;"	v
+_buildYhat	dictol/LRSDL.py	/^    def _buildYhat(self):$/;"	m	class:LRSDL
+_calc_f	dictol/COPAR.py	/^    def _calc_f(self, Xc):$/;"	m	class:UpdateXc
+_calc_f	dictol/LRSDL.py	/^    def _calc_f(self, X1):$/;"	m	class:_UpdateXX0
+_calc_f	dictol/optimize.py	/^    def _calc_f(self, X):$/;"	m	class:Lasso
+_coefMM0	dictol/LRSDL.py	/^    def _coefMM0(self):$/;"	m	class:LRSDL
+_discriminative	dictol/LRSDL.py	/^    def _discriminative(self):$/;"	m	class:LRSDL
+_discriminative	dictol/LRSDL.py	/^    def _discriminative(self, X):$/;"	m	class:_UpdateXX0
+_extract_fromX1	dictol/LRSDL.py	/^    def _extract_fromX1(self, X1):$/;"	m	class:LRSDL
+_extract_fromX1	dictol/LRSDL.py	/^    def _extract_fromX1(self, X1):$/;"	m	class:_UpdateXX0
+_fidelity	dictol/LRSDL.py	/^    def _fidelity(self):$/;"	m	class:LRSDL
+_fidelity	dictol/LRSDL.py	/^    def _fidelity(self, X):$/;"	m	class:_UpdateXX0
+_getDc	dictol/COPAR.py	/^    def _getDc(self, c):$/;"	m	class:COPAR
+_getDc	dictol/DLSI.py	/^    def _getDc(self, c):$/;"	m	class:DLSI
+_getYc	dictol/COPAR.py	/^    def _getYc(self, c):$/;"	m	class:COPAR
+_getYc	dictol/DLSI.py	/^    def _getYc(self, c):$/;"	m	class:DLSI
+_getYc	dictol/LRSDL.py	/^    def _getYc(self, c):$/;"	m	class:LRSDL
+_grad	dictol/COPAR.py	/^    def _grad(self, Xc0):$/;"	m	class:UpdateXc
+_grad	dictol/LRSDL.py	/^    def _grad(self, X1):$/;"	m	class:_UpdateXX0
+_grad	dictol/optimize.py	/^    def _grad(self, X):$/;"	m	class:Lasso
+_initialize	dictol/COPAR.py	/^    def _initialize(self):$/;"	m	class:COPAR
+_initialize	dictol/DLSI.py	/^    def _initialize(self):$/;"	m	class:DLSI
+_initialize	dictol/LRSDL.py	/^    def _initialize(self):$/;"	m	class:LRSDL
+_test_lasso	dictol/optimize.py	/^def _test_lasso():$/;"	f
+_updateD	dictol/COPAR.py	/^    def _updateD(self):$/;"	m	class:COPAR
+_updateD	dictol/DLSI.py	/^    def _updateD(self):$/;"	m	class:DLSI
+_updateD	dictol/LRSDL.py	/^    def _updateD(self):$/;"	m	class:LRSDL
+_updateD0	dictol/LRSDL.py	/^    def _updateD0(self):$/;"	m	class:LRSDL
+_updateDc	dictol/DLSI.py	/^    def _updateDc(self, c):$/;"	m	class:DLSI
+_updateX	dictol/COPAR.py	/^    def _updateX(self):$/;"	m	class:COPAR
+_updateX	dictol/DLSI.py	/^    def _updateX(self):$/;"	m	class:DLSI
+_updateXX0	dictol/LRSDL.py	/^    def _updateXX0(self):$/;"	m	class:LRSDL
+_updateXc	dictol/DLSI.py	/^    def _updateXc(self, c):$/;"	m	class:DLSI
+_zero	dictol/LRSDL.py	/^_zero = np.array([0])$/;"	v
+assert_array_eq	dictol/test_utils.py	/^from qcore.asserts import assert_eq, assert_array_eq$/;"	i
+assert_eq	dictol/test_utils.py	/^from qcore.asserts import assert_eq, assert_array_eq$/;"	i
+buildM_2Mbar	dictol/utils.py	/^def buildM_2Mbar(X, Y_range, lambda2):$/;"	f
+buildMean	dictol/utils.py	/^def buildMean(X):$/;"	f
+buildMhat	dictol/utils.py	/^def buildMhat(M, range_row, range_col):$/;"	f
+buildMhat_test	dictol/utils.py	/^def buildMhat_test():$/;"	f
+build_mean_matrix	dictol/LRSDL.py	/^from .utils import normF2, norm1, get_block_col, get_block_row, nuclearnorm, build_mean_matrix$/;"	i
+build_mean_matrix	dictol/utils.py	/^def build_mean_matrix(X, cols = None):$/;"	f
+build_mean_vector	dictol/utils.py	/^def build_mean_vector(X, Y_range):$/;"	f
+calc_acc	dictol/utils.py	/^def calc_acc(pred, ground_truth):$/;"	f
+calc_cost	dictol/optimize.py	/^    def calc_cost(D):$/;"	f	function:DLSI_updateD
+calc_cost	dictol/optimize.py	/^    def calc_cost(D):$/;"	f	function:ODL_updateD
+check_grad	dictol/optimize.py	/^    def check_grad(self, X):$/;"	m	class:Fista
+check_grad	dictol/optimize.py	/^def check_grad(func, grad, X):$/;"	f
+demo	dictol/__init__.py	/^def demo():$/;"	f
+demo	main.py	/^def demo():$/;"	f
+erase_diagonal	dictol/utils.py	/^def erase_diagonal(A):$/;"	f
+erase_diagonal_blocks	dictol/utils.py	/^def erase_diagonal_blocks(A, row_range, col_range):$/;"	f
+evaluate	dictol/COPAR.py	/^    def evaluate(self, Y_test, label_test, metrics = ['accuracy']):$/;"	m	class:COPAR
+evaluate	dictol/DLSI.py	/^    def evaluate(self, Y_test, label_test, metrics = ['accuracy']):$/;"	m	class:DLSI
+evaluate	dictol/LRSDL.py	/^    def evaluate(self, Y_test, label_test):$/;"	m	class:LRSDL
+evaluate	dictol/SRC.py	/^    def evaluate(self, Y_test, label_test):$/;"	m	class:SRC
+fit	dictol/COPAR.py	/^    def fit(self, Y, label_train, iterations = 100, verbose = False, show_after = 5):$/;"	m	class:COPAR
+fit	dictol/DLSI.py	/^    def fit(self, Y, label_train, iterations = 100, verbose = False, show_after = 10):$/;"	m	class:DLSI
+fit	dictol/LRSDL.py	/^    def fit(self):$/;"	m	class:_UpdateXX0
+fit	dictol/LRSDL.py	/^    def fit(self, Y, train_label, verbose = False, iterations = 100, show_after = 5):$/;"	m	class:LRSDL
+fit	dictol/ODL.py	/^    def fit(self, Y, iterations = 100, verbose = False):$/;"	m	class:ODL
+fit	dictol/SRC.py	/^    def fit(self, Y_train, label_train):$/;"	m	class:SRC
+fit	dictol/optimize.py	/^    def fit(self, Y, Xinit = None, iterations = 100):$/;"	m	class:Lasso
+full_express	dictol/utils.py	/^    def full_express(self):$/;"	m	class:MyForm
+get_block	dictol/utils.py	/^def get_block(M, i, j, row_range, col_range):$/;"	f
+get_block_col	dictol/LRSDL.py	/^from .utils import normF2, norm1, get_block_col, get_block_row, nuclearnorm, build_mean_matrix$/;"	i
+get_block_col	dictol/utils.py	/^def get_block_col(M, C, col_range):$/;"	f
+get_block_col_test	dictol/utils.py	/^def get_block_col_test():$/;"	f
+get_block_row	dictol/LRSDL.py	/^from .utils import normF2, norm1, get_block_col, get_block_row, nuclearnorm, build_mean_matrix$/;"	i
+get_block_row	dictol/utils.py	/^def get_block_row(M, C, row_range):$/;"	f
+get_block_row_test	dictol/utils.py	/^def get_block_row_test():$/;"	f
+get_block_test	dictol/utils.py	/^def get_block_test():$/;"	f
+get_range	dictol/utils.py	/^def get_range(arange, c):$/;"	f
+get_time_str	dictol/utils.py	/^def get_time_str():$/;"	f
+inv	dictol/utils.py	/^    def inv(self):$/;"	m	class:MyForm
+inv_IpXY	dictol/utils.py	/^def inv_IpXY(X, Y):$/;"	f
+inv_IpXY_test	dictol/utils.py	/^def inv_IpXY_test():$/;"	f
+is_vector	dictol/utils.py	/^def is_vector(x):$/;"	f
+label_to_range	dictol/utils.py	/^def label_to_range(label):$/;"	f
+loss	dictol/COPAR.py	/^    def loss(self):$/;"	m	class:COPAR
+loss	dictol/DLSI.py	/^    def loss(self):$/;"	m	class:DLSI
+loss	dictol/LRSDL.py	/^    def loss(self):$/;"	m	class:LRSDL
+loss	dictol/ODL.py	/^    def loss(self):$/;"	m	class:ODL
+lossF	dictol/COPAR.py	/^    def lossF(self, Xc):$/;"	m	class:UpdateXc
+lossF	dictol/LRSDL.py	/^    def lossF(self, X1):$/;"	m	class:_UpdateXX0
+lossF	dictol/optimize.py	/^    def lossF(self, X):$/;"	m	class:Lasso
+math	dictol/optimize.py	/^import math$/;"	i
+math	dictol/utils.py	/^import math$/;"	i
+matlab_syntax	dictol/LRSDL.py	/^from . import optimize, matlab_syntax$/;"	i
+max_eig	dictol/utils.py	/^def max_eig(D):$/;"	f
+min_rank_dict	dictol/optimize.py	/^def min_rank_dict(Y, X, lambdaD, Dinit, iterations = 100, tol = 1e-8):$/;"	f
+mini_test_unit	dictol/COPAR.py	/^def mini_test_unit():$/;"	f
+mini_test_unit	dictol/DLSI.py	/^def mini_test_unit():$/;"	f
+mini_test_unit	dictol/LRSDL.py	/^def mini_test_unit():$/;"	f
+mini_test_unit	dictol/SRC.py	/^def mini_test_unit():$/;"	f
+mini_test_unit_FDDL	dictol/LRSDL.py	/^def mini_test_unit_FDDL():$/;"	f
+mult	dictol/utils.py	/^    def mult(self, other):$/;"	m	class:MyForm
+mult_vec	dictol/utils.py	/^    def mult_vec(self, x):$/;"	m	class:MyForm
+myload	dictol/utils.py	/^def myload(filename):$/;"	f
+myreshape	dictol/utils.py	/^def myreshape(x, c, r):$/;"	f
+norm1	dictol/LRSDL.py	/^from .utils import normF2, norm1, get_block_col, get_block_row, nuclearnorm, build_mean_matrix$/;"	i
+norm1	dictol/utils.py	/^def norm1(X):$/;"	f
+norm1_test	dictol/utils.py	/^def norm1_test():$/;"	f
+normF2	dictol/LRSDL.py	/^from .utils import normF2, norm1, get_block_col, get_block_row, nuclearnorm, build_mean_matrix$/;"	i
+normF2	dictol/utils.py	/^def normF2(X):$/;"	f
+normF2_test	dictol/utils.py	/^def normF2_test():$/;"	f
+normc	dictol/utils.py	/^def normc(A):$/;"	f
+np	dictol/COPAR.py	/^import numpy as np$/;"	i
+np	dictol/DLSI.py	/^import numpy as np$/;"	i
+np	dictol/LRSDL.py	/^import numpy as np$/;"	i
+np	dictol/ODL.py	/^import numpy as np$/;"	i
+np	dictol/SRC.py	/^import numpy as np$/;"	i
+np	dictol/matlab_syntax.py	/^import numpy as np$/;"	i
+np	dictol/optimize.py	/^import numpy as np$/;"	i
+np	dictol/test_utils.py	/^import numpy as np$/;"	i
+np	dictol/utils.py	/^import numpy as np$/;"	i
+nuclearnorm	dictol/LRSDL.py	/^from .utils import normF2, norm1, get_block_col, get_block_row, nuclearnorm, build_mean_matrix$/;"	i
+nuclearnorm	dictol/utils.py	/^def nuclearnorm(X):$/;"	f
+num_grad	dictol/optimize.py	/^def num_grad(func, X):$/;"	f
+numpy	dictol/utils.py	/^import numpy.linalg as LA$/;"	i
+optimize	dictol/COPAR.py	/^from . import utils, optimize$/;"	i
+optimize	dictol/DLSI.py	/^from . import utils, optimize$/;"	i
+optimize	dictol/LRSDL.py	/^from . import optimize, matlab_syntax$/;"	i
+optimize	dictol/ODL.py	/^from . import utils, optimize$/;"	i
+os	dictol/utils.py	/^import os$/;"	i
+pickDfromY	dictol/utils.py	/^def pickDfromY(Y, Y_range, D_range):$/;"	f
+pickDfromY_test	dictol/utils.py	/^def pickDfromY_test():$/;"	f
+pickTrainTest	dictol/utils.py	/^def pickTrainTest(dataset, N_train_c):$/;"	f
+pkg_resources	dictol/utils.py	/^import pkg_resources$/;"	i
+predict	dictol/COPAR.py	/^    def predict(self, Y):$/;"	m	class:COPAR
+predict	dictol/DLSI.py	/^    def predict(self, Y):$/;"	m	class:DLSI
+predict	dictol/LRSDL.py	/^    def predict(self, Y):$/;"	m	class:LRSDL
+predict	dictol/SRC.py	/^    def predict(self, Y, verbose = True, iterations = 100):$/;"	m	class:SRC
+print_function	dictol/COPAR.py	/^from __future__ import print_function$/;"	i
+print_function	dictol/DLSI.py	/^from __future__ import print_function$/;"	i
+print_function	dictol/LRSDL.py	/^from __future__ import print_function$/;"	i
+print_function	dictol/ODL.py	/^from __future__ import print_function$/;"	i
+print_function	dictol/SRC.py	/^from __future__ import print_function$/;"	i
+print_function	dictol/optimize.py	/^from __future__ import print_function$/;"	i
+progress_str	dictol/utils.py	/^def progress_str(cur_val, max_val, total_point=50):$/;"	f
+randperm	dictol/utils.py	/^def randperm(n):$/;"	f
+randperm_test	dictol/utils.py	/^def randperm_test():$/;"	f
+range_delete_ids	dictol/utils.py	/^def range_delete_ids(a_range, ids):$/;"	f
+range_delete_ids_test	dictol/utils.py	/^def range_delete_ids_test():$/;"	f
+range_reduce	dictol/utils.py	/^def range_reduce(D_range, bad_ids):$/;"	f
+range_reduce_test	dictol/utils.py	/^def range_reduce_test():$/;"	f
+range_to_label	dictol/utils.py	/^def range_to_label(arange):$/;"	f
+range_to_label_test	dictol/utils.py	/^def range_to_label_test():$/;"	f
+repmat	dictol/matlab_syntax.py	/^def repmat(A, rows, cols):$/;"	f
+repmat	dictol/utils.py	/^def repmat(A, rows, cols):$/;"	f
+scipy	dictol/utils.py	/^import scipy.io as sio$/;"	i
+set_class	dictol/COPAR.py	/^    def set_class(self, c):$/;"	m	class:UpdateXc
+shrinkage	dictol/utils.py	/^def shrinkage(U, alambda):$/;"	f
+shrinkage_rank	dictol/utils.py	/^def shrinkage_rank(D, alambda):$/;"	f
+shrinkage_test	dictol/utils.py	/^def shrinkage_test():$/;"	f
+sio	dictol/utils.py	/^import scipy.io as sio$/;"	i
+solve	dictol/optimize.py	/^    def solve(self, Xinit = None, iterations = 100, tol = 1e-8, verbose = False):$/;"	m	class:Fista
+strftime	dictol/utils.py	/^from time import strftime$/;"	i
+test_label_to_range	dictol/test_utils.py	/^def test_label_to_range():$/;"	f
+test_unit	dictol/COPAR.py	/^def test_unit():$/;"	f
+test_unit	dictol/DLSI.py	/^def test_unit():$/;"	f
+test_unit	dictol/LRSDL.py	/^def test_unit():$/;"	f
+test_unit	dictol/ODL.py	/^def test_unit():$/;"	f
+test_unit	dictol/SRC.py	/^def test_unit():$/;"	f
+test_unit_FDDL	dictol/LRSDL.py	/^def test_unit_FDDL():$/;"	f
+time	dictol/utils.py	/^import time$/;"	i
+time_estimate	dictol/utils.py	/^def time_estimate(t):$/;"	f
+train_test_split	dictol/utils.py	/^def train_test_split(dataset, N_train):$/;"	f
+utils	dictol/COPAR.py	/^from . import utils, optimize$/;"	i
+utils	dictol/DLSI.py	/^from . import utils, optimize$/;"	i
+utils	dictol/LRSDL.py	/^from . import utils$/;"	i
+utils	dictol/ODL.py	/^from . import utils, optimize$/;"	i
+utils	dictol/SRC.py	/^from . import utils$/;"	i
+utils	dictol/__init__.py	/^    from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+utils	dictol/optimize.py	/^from . import utils$/;"	i
+utils	dictol/test_utils.py	/^from . import utils$/;"	i
+utils	main.py	/^from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils$/;"	i
+vec	dictol/matlab_syntax.py	/^def vec(A):$/;"	f
+vec	dictol/utils.py	/^def vec(A):$/;"	f

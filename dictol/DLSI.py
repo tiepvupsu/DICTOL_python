@@ -19,11 +19,11 @@ class DLSI(object):
         self.Y = Y
         del Y
         self.Y_range = utils.label_to_range(label_train)
-        self.nclass = self.Y_range.size - 1
-        self.D_range = [self.k * i for i in range(self.nclass + 1)]
+        self.num_classes = len(self.Y_range) - 1 
+        self.D_range = [self.k * i for i in range(self.num_classes + 1)]
         self.D = np.zeros((self.Y.shape[0], self.D_range[-1]))
         self.X = []
-        for c in range(self.nclass):
+        for c in range(self.num_classes):
             n_rows = self.D_range[c+1] - self.D_range[c]
             n_cols = self.Y_range[c+1] - self.Y_range[c]
             self.X.append(np.zeros((n_rows, n_cols)))
@@ -49,7 +49,7 @@ class DLSI(object):
         return utils.get_block_col(self.D, c, self.D_range)
 
     def _initialize(self):
-        for c in range(self.nclass):
+        for c in range(self.num_classes):
             Yc = utils.get_block_col(self.Y, c, self.Y_range)
             clf = ODL(k = self.D_range[c+1] - self.D_range[c], lambd = self.lambd)
             clf.fit(Yc)
@@ -62,11 +62,11 @@ class DLSI(object):
         self.X[c] = lasso.coef_
 
     def _updateX(self):
-        for c in range(self.nclass):
+        for c in range(self.num_classes):
             self._updateXc(c)
 
     def _updateD(self):
-        for c in range(self.nclass):
+        for c in range(self.num_classes):
             self._updateDc(c)
 
     def _updateDc(self, c):
@@ -82,7 +82,7 @@ class DLSI(object):
 
     def loss(self):
         cost = 0
-        for c in range(self.nclass):
+        for c in range(self.num_classes):
             Yc = utils.get_block_col(self.Y, c, self.Y_range)
             Xc = self.X[c]
             Dc = utils.get_block_col(self.D, c, self.D_range)
@@ -92,8 +92,8 @@ class DLSI(object):
         return cost
 
     def predict(self, Y):
-        E = np.zeros((self.nclass, Y.shape[1]))
-        for c in range(self.nclass):
+        E = np.zeros((self.num_classes, Y.shape[1]))
+        for c in range(self.num_classes):
             Dc = self._getDc(c)
             lasso = optimize.Lasso(Dc, self.lambd)
             lasso.fit(Y)
