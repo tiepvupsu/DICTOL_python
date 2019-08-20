@@ -140,65 +140,52 @@ def get_block_col(matrix, block_indices, col_range):
     return get_block_row(matrix.T, block_indices, col_range).T
 
 
-def get_block(M, i, j, row_range, col_range):
+def get_block(matrix, i, j, row_range, col_range):
     """
-    * Extract a submatrix of a matrix
-    * Syntax: `Mij = get_block(M, i, j, row_range, col_range)`
-        - `M` the big matrix:
-        `M = [  M11, M12, ..., M1m;
-                M21, M22, ..., M2m;
-                ... ;
-                Mn1, Mn2, ..., Mnm]`
-        - `i`: row block index
-        - `j`: column block index
-        - `row_range`: row range
-        - `col_range`: columns range
-    * Note: `get_block(M, i, j, row_range, col_range) =
-    get_block_col(get_block_row(M, i, row_range), j, col_range).`
+    Extract a submatrix of a matrix
+
+    Parameters:
+    -----------
+    matrix the big matrix:
+    matrix = [ M11, M12, ..., M1m;
+               M21, M22, ..., M2m;
+               ... ;
+               Mn1, Mn2, ..., Mnm]
+    i: row block index
+    j: column block index
+    row_range: row range
+    col_range: columns range
     """
-    # pass
-    return M[row_range[i]:row_range[i+1], col_range[j]: col_range[j+1]].copy()
+    return matrix[row_range[i]:row_range[i+1],
+                  col_range[j]: col_range[j+1]].copy()
 
 
 def norm1(X):
     """
-    * Return norm 1 of a matrix, which is sum of absolute value of all element
+    Return norm 1 of a matrix, which is sum of the absolute value of all elements
     of that matrix.
     """
-    # pass
     if X.shape[0]*X.shape[1] == 0:
         return 0
     return abs(X).sum()
-    # return LA.norm(X, 1)
 
 
 def normF2(X):
     """
-    * Return square of the Frobenius norm, which is sum of square of all
+    Return square of the Frobenius norm, which is sum of square of all
     elements in a matrix
-    * Syntax: `res = normF2(X)`
     """
-    # pass
     if X.shape[0]*X.shape[1] == 0:
         return 0
     return LA.norm(X, 'fro')**2
 
-def is_vector(x):
-    """
-    check if a numpy.ndarray variable x is a vector
-    ---------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 04/22/2016
-            http://www.personal.psu.edu/thv102/
-    ---------------------------------------------
-    """
-    return len(x.shape) == 1
 
 def normc(A):
-    # return A / LA.norm(A, axis=0)[None,:]
     """
     normalize each column of A to have norm2 = 1
     """
-    return A/ np.tile(np.sqrt(np.sum(A*A, axis=0)), (A.shape[0], 1))
+    return A / np.tile(np.sqrt(np.sum(A*A, axis=0)), (A.shape[0], 1))
+
 
 def nuclearnorm(X):
     """
@@ -207,7 +194,7 @@ def nuclearnorm(X):
     """
     if X.size == 0:
         return 0
-    return LA.norm(X) if is_vector(X) else LA.norm(X, 'nuc')
+    return LA.norm(X) if X.ndim == 1 else LA.norm(X, 'nuc')
 
 
 def shrinkage(U, alambda):
