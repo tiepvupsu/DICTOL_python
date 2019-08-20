@@ -12,12 +12,11 @@ from .ODL import ODL
 
 _zero = np.array([0])
 
-# supporting function
 class _UpdateXX0(optimize.Fista):
     """
     solve XX0 in LRSDL using Fista
     """
-    def __init__(self, Y, Y_range, D, D_range, D0, k0, lambd = 0.01, lambd2 = 0.01):
+    def __init__(self, Y, Y_range, D, D_range, D0, k0, lambd=0.01, lambd2=0.01):
         self.Y = Y
         self.Y_range = Y_range
         self.nclass = len(Y_range) - 1
@@ -38,11 +37,8 @@ class _UpdateXX0(optimize.Fista):
 
         self.DtY0 = np.dot(self.D.T, self.Y)
         self.L = utils.max_eig(self.Dhat) + 4*self.lambd2 + 1
-        if self.k0 > 0: self.L += utils.max_eig(self.A)
-        pass
-
-    def fit(self):
-        pass
+        if self.k0 > 0:
+            self.L += utils.max_eig(self.A)
 
     def _extract_fromX1(self, X1):
         K = self.D_range[-1]
@@ -56,7 +52,7 @@ class _UpdateXX0(optimize.Fista):
         if self.k0 > 0:
             g0 = np.dot(self.A, X0) - self.D0tY2 \
                 + np.dot(self.D0tD, utils.buildMhat(X, self.D_range, self.Y_range)) \
-                - self.lambd2*utils.buildMean(X0)
+                - self.lambd2*utils.build_mean_matrix(X0)
             return np.vstack((g, g0))
         return g
 
@@ -69,11 +65,11 @@ class _UpdateXX0(optimize.Fista):
         cost = 0
         Y = self.Y
         for c in range(self.nclass):
-            Yc   = get_block_col(Y, c, self.Y_range)
-            Dc   = get_block_col(self.D, c, self.D_range)
-            Xc   = get_block_row(X, c, self.D_range)
-            Xcc  = get_block_col(Xc, c, self.Y_range)
-            cost +=normF2(Yc - np.dot(Dc, Xcc))
+            Yc  = get_block_col(Y, c, self.Y_range)
+            Dc  = get_block_col(self.D, c, self.D_range)
+            Xc  = get_block_row(X, c, self.D_range)
+            Xcc = get_block_col(Xc, c, self.Y_range)
+            cost += normF2(Yc - np.dot(Dc, Xcc))
             for i in range(self.nclass):
                 if i == c:
                     continue
@@ -87,12 +83,12 @@ class _UpdateXX0(optimize.Fista):
         * $\|X\|_F^2 + \sum_{c=1}^C (\|Xc - Mc\|_F^2 - \|Mc - M\|_F^2) $
         """
         cost = normF2(X)
-        m = np.mean(X, axis = 1)
+        m = np.mean(X, axis=1)
         for c in range(self.nclass):
-            Xc   = get_block_col(X, c, self.Y_range)
-            Mc   = build_mean_matrix(Xc)
+            Xc  = get_block_col(X, c, self.Y_range)
+            Mc  = build_mean_matrix(Xc)
             cost += normF2(Xc - Mc)
-            M    = matlab_syntax.repmat(m, 1, Xc.shape[1])
+            M  = matlab_syntax.repmat(m, 1, Xc.shape[1])
             cost -= normF2(Mc - M)
         return cost
 
@@ -100,15 +96,16 @@ class _UpdateXX0(optimize.Fista):
         X, X0 = self._extract_fromX1(X1)
         Ybar = self.Y - np.dot(self.D0, X0)
         cost = 0.5*(normF2(Ybar - np.dot(self.D, X)) + self._fidelity(X)) + \
-                0.5*self.lambd2*self._discriminative(X) + normF2(X0 - utils.buildMean(X0))
+                0.5*self.lambd2*self._discriminative(X) + normF2(X0 - utils.build_mean_matrix(X0))
         return cost
 
     def lossF(self, X1):
         return self._calc_f(X1) + self.lambd*norm1(X1)
 
+
 class LRSDL(object):
-    def __init__(self, lambd = 0.01, lambd2 = 0.01, eta = 0.0001,
-            k = 10, k0 = 5, updateX_iters = 100, updateD_iters = 100):
+    def __init__(self, lambd=0.01, lambd2=0.01, eta=0.0001,
+            k=10, k0=5, updateX_iters=100, updateD_iters=100):
         self.lambd = lambd
         self.lambd2 = lambd2
         self.eta = eta
@@ -128,7 +125,7 @@ class LRSDL(object):
     def _getYc(self, c):
         return get_block_col(self.Y, c, self.Y_range)
 
-    def fit(self, Y, train_label, verbose = False, iterations = 100, show_after = 5):
+    def fit(self, Y, train_label, verbose=False, iterations=100, show_after=5):
         self.Y_range = utils.label_to_range(train_label)
         self.nclass = len(self.Y_range) - 1
         self.D_range = [self.k*i for i in range(self.nclass+1)]
@@ -138,22 +135,24 @@ class LRSDL(object):
         if self.k0 > 0:
             self.D0 = np.zeros((self.Y.shape[0], self.k0))
             self.X0 = np.zeros((self.k0, self.Y.shape[1]))
-        ## init
+
+        # init
         if verbose:
             print('initializing ... ')
         self._initialize()
         if verbose:
-            print('initial loss %.4f'%self.loss())
-        ## train
+            print('initial loss %.4f' % self.loss())
+
+        # train
         for it in range(iterations):
             # update D
             self._updateD()
             # update D0
             if self.k0 > 0:
-               self._updateD0()
+                self._updateD0()
             self._updateXX0()
-            if verbose and (it == 0 or (it + 1)%show_after == 0):
-                print('iter \t%3d/%3d \t loss %.4f'%(it+1, iterations, self.loss()))
+            if verbose and (it == 0 or (it + 1) % show_after == 0):
+                print('iter \t%3d/%3d \t loss %.4f' % (it+1, iterations, self.loss()))
 
     def _updateD(self):
         Y = self.Y if self.k0 == 0 else self.Y - np.dot(self.D0, self.X0)
@@ -166,11 +165,11 @@ class LRSDL(object):
         return (X1[:K, :], X1[K:, :]) if self.k0 > 0 else (X1[:K, :], _zero)
 
     def _updateXX0(self):
-        clf = _UpdateXX0(self.Y, self.Y_range, self.D, self.D_range, self.D0, \
-                self.k0, lambd = self.lambd, lambd2 = self.lambd2)
-        # clf.check_grad(np.vstack((self.X, self.X0)) if self.k0 > 0 else self.X)
+        clf = _UpdateXX0(self.Y, self.Y_range, self.D, self.D_range, self.D0,
+                         self.k0, lambd=self.lambd, lambd2=self.lambd2)
+
         X1 = np.vstack((self.X, self.X0)) if self.k0 > 0 else self.X
-        X1 = clf.solve(Xinit = X1)
+        X1 = clf.solve(Xinit=X1)
         self.X, self.X0 = self._extract_fromX1(X1)
 
     def _buildYhat(self):
@@ -189,37 +188,35 @@ class LRSDL(object):
     def _updateD0(self):
         Ybar = self.Y - np.dot(self.D, self.X)
         L = (Ybar + self._buildYhat())/2
-        self.D0 = optimize.min_rank_dict(L, self.X0, self.eta/2, \
-                Dinit = self.D0, iterations = 50)
+        self.D0 = optimize.min_rank_dict(L, self.X0, self.eta/2, Dinit=self.D0, iterations=50)
 
     def _initialize(self):
         for c in range(self.nclass):
-            clf = ODL(lambd = self.lambd, k = self.D_range[c+1] - self.D_range[c])
-            clf.fit(self._getYc(c), iterations = 5)
+            clf = ODL(lambd=self.lambd, k=self.D_range[c+1] - self.D_range[c])
+            clf.fit(self._getYc(c), iterations=5)
             self.D[:, self.D_range[c]:self.D_range[c+1]] = clf.D
-            self.X[self.D_range[c]: self.D_range[c+1], \
+            self.X[self.D_range[c]: self.D_range[c+1],
                    self.Y_range[c]: self.Y_range[c+1]] = clf.X
 
         if self.k0 > 0:
-            odl = ODL(lambd = self.lambd, k = self.k0)
+            odl = ODL(lambd=self.lambd, k=self.k0)
             odl.fit(self.Y)
             self.D0 = odl.D
             self.X0 = odl.X
 
     def _fidelity(self):
         """
-        * Calculating the fidelity term in FDDL
-        * $\sum_{c=1}^C \Big(\|Y_c - D_cX^c_c\|_F^2 +
-            \sum_{i \neq c} \|D_c X^c_i\|_F^2\Big)$
+        Calculating the fidelity term in FDDL
+        sum_{c=1}^C ||Y_c - D_cX^c_c||_F^2 + sum_{i != c} ||D_c X^c_i||_F^2$
         """
         cost = 0
         Y = self.Y - np.dot(self.D0, self.X0) if self.k0 > 0 else self.Y.copy()
         for c in range(self.nclass):
-            Yc   = get_block_col(Y, c, self.Y_range)
-            Dc   = get_block_col(self.D, c, self.D_range)
-            Xc   = get_block_row(self.X, c, self.D_range)
-            Xcc  = get_block_col(Xc, c, self.Y_range)
-            cost +=normF2(Yc - np.dot(Dc, Xcc))
+            Yc = get_block_col(Y, c, self.Y_range)
+            Dc = get_block_col(self.D, c, self.D_range)
+            Xc = get_block_row(self.X, c, self.D_range)
+            Xcc = get_block_col(Xc, c, self.Y_range)
+            cost += normF2(Yc - np.dot(Dc, Xcc))
             for i in range(self.nclass):
                 if i == c:
                     continue
@@ -237,12 +234,12 @@ class LRSDL(object):
         * $\|X\|_F^2 + \sum_{c=1}^C (\|Xc - Mc\|_F^2 - \|Mc - M\|_F^2) $
         """
         cost = normF2(self.X)
-        m = np.mean(self.X, axis = 1)
+        m = np.mean(self.X, axis=1)
         for c in range(self.nclass):
-            Xc   = get_block_col(self.X, c, self.Y_range)
-            Mc   = build_mean_matrix(Xc)
+            Xc = get_block_col(self.X, c, self.Y_range)
+            Mc = build_mean_matrix(Xc)
             cost += normF2(Xc - Mc)
-            M    = matlab_syntax.repmat(m, 1, Xc.shape[1])
+            M = matlab_syntax.repmat(m, 1, Xc.shape[1])
             cost -= normF2(Mc - M)
         return cost
 
@@ -251,41 +248,37 @@ class LRSDL(object):
         if self.k0 > 0:
             Y -= np.dot(self.D0, self.X0)
         cost = 0.5*normF2(Y - np.dot(self.D, self.X)) + \
-                0.5*self._fidelity() + \
-                0.5*self.lambd2*self._discriminative() + \
-                self.lambd*norm1(self.X)
+            0.5*self._fidelity() + \
+            0.5*self.lambd2*self._discriminative() + \
+            self.lambd*norm1(self.X)
 
         if self.k0 > 0:
             cost += self.lambd*norm1(self.X0) + \
-                    0.5*self.lambd2*normF2(self.X0 - build_mean_matrix(self.X0)) \
-                    + self.eta*nuclearnorm(self.D0)
+                0.5*self.lambd2*normF2(self.X0 - build_mean_matrix(self.X0)) \
+                + self.eta*nuclearnorm(self.D0)
         return cost
 
     def predict(self, Y):
         N = Y.shape[1]
-        lambda_list = [self.lambd]
-        for lambd in lambda_list:
-            E = np.zeros((self.nclass, N))
-            for c in range(self.nclass):
-                # Dc in D only
-                Dc_ = get_block_col(self.D, c, self.D_range)
-                # Dc in D and D0
-                Dc = np.hstack((Dc_, self.D0)) if self.k0 > 0 else Dc_
-                lasso = optimize.Lasso(Dc, lambd = lambd)
-                lasso.fit(Y)
-                Xc = lasso.solve()
-                R = Y - np.dot(Dc, Xc)
-                E[c, :] = 0.5*np.sum(R*R, axis = 0) + \
-                        lambd*np.sum(np.abs(Xc), axis = 0)
-            pred = np.argmin(E, axis = 0) + 1
+        E = np.zeros((self.nclass, N))
+        for c in range(self.nclass):
+            # Dc in D only
+            Dc_ = get_block_col(self.D, c, self.D_range)
+            # Dc in D and D0
+            Dc = np.hstack((Dc_, self.D0)) if self.k0 > 0 else Dc_
+            lasso = optimize.Lasso(Dc, lambd=self.lambd)
+            lasso.fit(Y)
+            Xc = lasso.solve()
+            R = Y - np.dot(Dc, Xc)
+            E[c, :] = 0.5*np.sum(R*R, axis=0) + self.lambd*np.sum(np.abs(Xc), axis=0)
+        pred = np.argmin(E, axis=0) + 1
         return pred
-        pass
 
     def evaluate(self, Y_test, label_test):
         print('evaluating...')
         pred = self.predict(Y_test)
-        acc = np.sum(pred == label_test)/float(label_test.size)
-        print('accuracy = %.2f'%(100*acc))
+        acc = np.sum(pred == label_test)/float(len(label_test))
+        print('accuracy = %.2f' % (100*acc))
         return acc
 
 
@@ -294,44 +287,44 @@ def mini_test_unit():
     print('Mini Unit test: Low-rank shared Dictionary Learning')
     dataset = 'myYaleB'
     N_train = 5
-    dataset, Y_train, Y_test, label_train, label_test = \
-           utils.train_test_split(dataset, N_train)
-    clf = LRSDL(lambd = 0.01, lambd2 = 0.01, eta = 0.1, k = 4, k0 = 5)
-    clf.fit(Y_train, label_train, iterations = 30, verbose = True)
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    clf = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=4, k0=5)
+    clf.fit(Y_train, label_train, iterations=30, verbose=True)
     clf.evaluate(Y_test, label_test)
+
 
 def mini_test_unit_FDDL():
     print('\n===================================================================')
     print('Mini Unit test: Fisher Disrciminant Dicationary Learning')
     dataset = 'myYaleB'
     N_train = 5
-    dataset, Y_train, Y_test, label_train, label_test = \
-           utils.train_test_split(dataset, N_train)
-    clf = LRSDL(lambd = 0.01, lambd2 = 0.01, eta = 0.1, k = 4, k0 = 0)
-    clf.fit(Y_train, label_train, iterations = 30, verbose = True)
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    clf = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=4, k0=0)
+    clf.fit(Y_train, label_train, iterations=30, verbose=True)
     clf.evaluate(Y_test, label_test)
+
 
 def test_unit_FDDL():
     print('\n===================================================================')
     print('Unit test: Fisher Disrciminant Dicationary Learning')
     dataset = 'myYaleB'
     N_train = 30
-    dataset, Y_train, Y_test, label_train, label_test = \
-           utils.train_test_split(dataset, N_train)
-    clf = LRSDL(lambd = 0.01, lambd2 = 0.01, eta = 0.1, k = 20, k0 = 0)
-    clf.fit(Y_train, label_train, iterations = 30, verbose = True)
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    clf = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=20, k0=0)
+    clf.fit(Y_train, label_train, iterations=30, verbose=True)
     clf.evaluate(Y_test, label_test)
+
 
 def test_unit():
     print('\n===================================================================')
     print('Unit test: Low-rank shared Dictionary Learning')
     dataset = 'myYaleB'
     N_train = 30
-    dataset, Y_train, Y_test, label_train, label_test = \
-           utils.train_test_split(dataset, N_train)
-    clf = LRSDL(lambd = 0.01, lambd2 = 0.01, eta = 0.1, k = 20, k0 = 10)
-    clf.fit(Y_train, label_train, iterations = 30, verbose = True)
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    clf = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=20, k0=10)
+    clf.fit(Y_train, label_train, iterations=30, verbose=True)
     clf.evaluate(Y_test, label_test)
+
 
 if __name__ == '__main__':
     mini_test_unit_FDDL()

@@ -24,7 +24,6 @@ class ODL(object):
             if k is None, select k = round(0.2*n_samples)
         """
         self.Y = Y
-        del Y
         Y_range = np.array([0, self.Y.shape[1]])
         D_range = np.array([0, self.k])
         self.D = utils.pickDfromY(self.Y, Y_range, D_range)

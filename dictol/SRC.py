@@ -37,22 +37,11 @@ class SRC(object):
 
 
 def mini_test_unit():
-    print('\n===================================================================')
+    print('\n================================================================')
     print('Mini Unit test: Sparse Representation-based Classification (SRC)')
     dataset = 'myYaleB'
     N_train = 2
-    dataset, Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
-    clf = SRC(lamb=0.01)
-    clf.fit(Y_train, label_train)
-    clf.evaluate(Y_test, label_test)
-
-
-def test_unit():
-    print('\n===================================================================')
-    print('Unit test: Sparse Representation-based Classification (SRC)')
-    dataset = 'myYaleB'
-    N_train = 15
-    dataset, Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
     clf = SRC(lamb=0.01)
     clf.fit(Y_train, label_train)
     clf.evaluate(Y_test, label_test)

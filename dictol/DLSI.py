@@ -5,7 +5,7 @@ import numpy as np
 from .ODL import ODL
 
 class DLSI(object):
-    def __init__(self, k = 10, lambd = 0.01, eta = 0.01, updateD_iters = 100, updateX_iters = 100):
+    def __init__(self, k=10, lambd=0.01, eta=0.01, updateD_iters=100, updateX_iters=100):
         self.lambd = 0.01
         self.eta = 0.01
         self.D = None
@@ -58,7 +58,7 @@ class DLSI(object):
 
     def _updateXc(self, c):
         lasso = optimize.Lasso(self._getDc(c), self.lambd)
-        self.X[c] = lasso.fit(self._getYc(c), Xinit = self.X[c])
+        lasso.fit(self._getYc(c), Xinit = self.X[c])
         self.X[c] = lasso.coef_
 
     def _updateX(self):
@@ -76,9 +76,7 @@ class DLSI(object):
         F = np.dot(self.X[c], self.X[c].T)
         A = np.delete(self.D, list(range(self.D_range[c], self.D_range[c+1])), axis = 1).T
 
-        self.D[:, self.D_range[c]:self.D_range[c+1]] = \
-                optimize.DLSI_updateD(Dc, E, F, A, self.lambd)
-
+        self.D[:, self.D_range[c]:self.D_range[c+1]] = optimize.DLSI_updateD(Dc, E, F, A, self.lambd)
 
     def loss(self):
         cost = 0
@@ -105,7 +103,7 @@ class DLSI(object):
     def evaluate(self, Y_test, label_test, metrics = ['accuracy']):
         print('evaluating...')
         pred = self.predict(Y_test)
-        acc = np.sum(pred == label_test)/float(label_test.size)
+        acc = np.sum(pred == label_test)/float(len(label_test))
         print('accuracy = %.2f'%(100*acc))
         return acc
 
@@ -118,10 +116,9 @@ def mini_test_unit():
     print('Mini Unit test: DLSI')
     dataset = 'myYaleB'
     N_train = 5
-    dataset, Y_train, Y_test, label_train, label_test = \
-           utils.train_test_split(dataset, N_train)
-    clf = DLSI(k = 5, lambd = 0.001, eta = 0.001)
-    clf.fit(Y_train, label_train, iterations = 10, verbose = True)
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    clf = DLSI(k=3, lambd=0.001, eta=0.001)
+    clf.fit(Y_train, label_train, iterations=10, verbose=True)
     clf.evaluate(Y_test, label_test)
 
 
@@ -129,14 +126,12 @@ def test_unit():
     print('\n===================================================================')
     print('Unit test: DLSI')
     dataset = 'myYaleB'
-    N_train = 15
-    dataset, Y_train, Y_test, label_train, label_test = \
-           utils.train_test_split(dataset, N_train)
-    clf = DLSI(k = 10, lambd = 0.001, eta = 0.001)
-    clf.fit(Y_train, label_train, iterations = 100, verbose = True)
+    N_train = 5
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    clf = DLSI(k=10, lambd=0.001, eta=0.001)
+    clf.fit(Y_train, label_train, iterations=100, verbose=True)
     clf.evaluate(Y_test, label_test)
 
 
 if __name__ == '__main__':
     mini_test_unit()
-    # test_unit()

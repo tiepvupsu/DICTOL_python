@@ -3,6 +3,7 @@ from . import utils, optimize
 import numpy as np
 from .ODL import ODL
 
+
 class UpdateXc(optimize.Fista):
     """
     Update Xc in COPAR (page 189-190 COPAR)
@@ -129,7 +130,7 @@ class COPAR(object):
 
             cost1 += utils.normF2(Yc - np.dot(Dc, Xcc) - np.dot(DCp1, XCp1c))
             XX = Xc[: self.D_range_ext[-2], :]
-            XX = np.delete(XX, list(range(self.D_range_ext[c], self.D_range_ext[c+1])), axis = 0)
+            XX = np.delete(XX, list(range(self.D_range_ext[c], self.D_range_ext[c+1])), axis=0)
             cost1 += utils.normF2(XX)
 
         cost += cost1 + .5*self.eta*utils.normF2(
@@ -138,7 +139,7 @@ class COPAR(object):
                                         self.D_range_ext))
         return cost
 
-    def fit(self, Y, label_train, iterations = 100, verbose = False, show_after = 5):
+    def fit(self, Y, label_train, iterations=100, verbose=False, show_after=5):
         self.Y = Y
         del Y
         self.Y_range = utils.label_to_range(label_train)
@@ -153,7 +154,6 @@ class COPAR(object):
             print('initialization cost = %.4f'%self.loss())
         for it in range(iterations):
             self._updateD()
-            # print('iter \t%3d/%3d \t update D \t loss %.4f'%(it, iterations, self.loss()))
             self._updateX()
             if verbose and (it == 0 or (it + 1) % show_after == 0):
                 print('iter \t%3d/%3d \t loss %.4f'%(it+1, iterations, self.loss()))
@@ -209,9 +209,7 @@ class COPAR(object):
         F = 2*np.dot(XCp1, XCp1.T)
         A = self.D[:, : self.D_range_ext[-2]]
         DCp1_range = list(range(self.D_range_ext[-2], self.D_range_ext[-1]))
-        self.D[:, DCp1_range] = optimize.DLSI_updateD(
-            self.D[:, DCp1_range], E, F, A.T, self.eta)
-        # pass
+        self.D[:, DCp1_range] = optimize.DLSI_updateD(self.D[:, DCp1_range], E, F, A.T, self.eta)
 
     def predict(self, Y):
         E = np.zeros((self.nclass, Y.shape[1]))
@@ -239,8 +237,7 @@ def mini_test_unit():
     print('Mini Unit test: COPAR')
     dataset = 'myYaleB'
     N_train = 5
-    dataset, Y_train, Y_test, label_train, label_test = \
-        utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
     clf = COPAR(k=4, k0=5, lambd=0.001, eta=0.01)
     clf.fit(Y_train, label_train, iterations=10, verbose=True)
     clf.evaluate(Y_test, label_test)
@@ -251,8 +248,7 @@ def test_unit():
     print('Mini Unit test: COPAR')
     dataset = 'myYaleB'
     N_train = 15
-    dataset, Y_train, Y_test, label_train, label_test = \
-        utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
     clf = COPAR(k=10, k0=5, lambd=0.001, eta=0.01)
     clf.fit(Y_train, label_train, iterations=100, verbose=True)
     clf.evaluate(Y_test, label_test)
@@ -260,4 +256,3 @@ def test_unit():
 
 if __name__ == '__main__':
     mini_test_unit()
-    # test_unit()

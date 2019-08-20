@@ -81,8 +81,9 @@ def range_to_label(a_range):
         assert a_range[i] > a_range[i-1],\
             ('a_range must be an increasing list, '
              'got a_range[{}] = {} < a_range[{}] = {}').format(
-                i, a_range[i], i - 1, a_range[i-1]
-            )
+                 i, a_range[i], i - 1, a_range[i-1]
+             )
+
         res.extend([i]*(a_range[i] - a_range[i-1]))
     return res
 
@@ -189,8 +190,7 @@ def normc(A):
 
 def nuclearnorm(X):
     """
-    * Return nuclear norm of a matrix.
-    * Syntax `res = nuclearnorm(X)`
+    Return nuclear norm of a matrix.
     """
     if X.size == 0:
         return 0
@@ -199,24 +199,22 @@ def nuclearnorm(X):
 
 def shrinkage(U, alambda):
     """
-    * Soft thresholding function.
-    * Syntax: `X = shrinkage(U, lambda)`
-    * Solve the following optimization problem:
-    `X = arg min_X 0.5*||X - U||_F^2 + lambda||X||_1`
-    where `U` and `X` are matrices with same sizes. `lambda` can be either
-    positive a scalar or a positive matrix (all elements are positive) with
-    same size as `X`. In the latter case, it is a weighted problem.
+    Soft thresholding function.
+    
+    Solve the following optimization problem:
+    X = arg min_X 0.5*||X - U||_F^2 + lambda||X||_1
+    where U and X are matrices with same sizes. lambda can be either a positive
+    scalar or a positive matrix (all elements are positive) with same size as X.
     """
     return np.maximum(0, U - alambda) + np.minimum(0, U + alambda)
 
 
 def shrinkage_rank(D, alambda):
     """
-    * Singular value thresholding algorithm for matrix completion.
-    * Syntax: `Y = shrinkage_rank(D, lambda)`
-    * Solve the following optimization problem:
-      `X = arg min_X 0.5*||X - D||_F^2 + lambda*||X||_*`
-      where `||X||_*` is the nuclear norm.
+    Singular value thresholding algorithm for matrix completion.
+    Solve the following optimization problem:
+      X = arg min_X 0.5*||X - D||_F^2 + lambda*||X||_*
+      where ||X||_* is the nuclear norm.
     """
     U, s, V = LA.svd(D, full_matrices=False)
     s1 = np.maximum(0, s - alambda)
@@ -232,16 +230,16 @@ class MyForm:
         [   N N ... N;
             N N ... N;
             N N ... N]
-    with `k` block rows and columns
+    with k block rows and columns
     """
+
     def __init__(self, M, N, k):
         self.M = M.copy()
         self.N = N.copy()
         self.k = k
 
     def full_express(self):
-        return np.kron(np.eye(self.k), self.M) + \
-            np.tile(self.N, (self.k, self.k))
+        return np.kron(np.eye(self.k), self.M) + np.tile(self.N, (self.k, self.k))
 
     def mult(self, other):
         """
@@ -253,29 +251,34 @@ class MyForm:
         return MyForm(A, B, self.k)
 
     def inv(self):
+        """
+        compute inverse matrix
+        """
         A = LA.inv(self.M)
-        B = -np.dot(LA.inv(self.M + self.k*self.N), np.dot(self.N, A))
+        B = - np.dot(LA.inv(self.M + self.k*self.N), np.dot(self.N, A))
         return MyForm(A, B, self.k)
 
     def mult_vec(self, x):
-        # X = np.reshape(x, (self.k, self.M.shape[1])).T
+        """
+        return M*x (matrix vector multiplication)
+        """
         X = myreshape(x, self.M.shape[1], self.k)
-        p = np.dot(self.N, X).sum(axis = 1)
-        # print self.M,'\n', X, '\n', self.M.dot(X)
+        p = np.dot(self.N, X).sum(axis=1)
 
         return vec(np.dot(self.M, X)) + vec(np.tile(p, (1, self.k)))
 
 
 
 def randperm(n):
+    """
+    get a random permutation of range(n)
+    """
     return np.random.permutation(list(range(n)))
 
-def randperm_test():
-    n = 10
-    print(randperm(n))
 
-def get_range(arange, c):
-    return list(range(arange[c], arange[c+1]))
+# def get_range(arange, c):
+#     return list(range(arange[c], arange[c+1]))
+
 
 def pickDfromY(Y, Y_range, D_range):
     """
@@ -288,19 +291,18 @@ def pickDfromY(Y, Y_range, D_range):
         N_c = Yc.shape[1]
         # print Yc
         ids = randperm(N_c)
-        # range_Dc = get_range(D_range, c)
         kc = D_range[c+1] - D_range[c]
         D[:, D_range[c]:D_range[c+1]] = Yc[:, np.sort(ids[:kc])]
     return D
 
 
-def myload(filename):
+def load_mat(filename):
     return sio.loadmat(filename)
 
 
-def pickTrainTest(dataset, N_train_c):
+def picl_train_test(dataset, N_train_c):
     data_fn = pkg_resources.resource_filename('dictol', 'data/'+dataset + '.mat') 
-    vars_dict = myload(data_fn)
+    vars_dict = load_mat(data_fn)
     Y = vars_dict['Y']
     d = Y.shape[0]
     if 'Y_range' not in vars_dict:
@@ -316,8 +318,6 @@ def pickTrainTest(dataset, N_train_c):
 
     Y_train     = np.zeros((d, N_train))
     Y_test      = np.zeros((d, N_test))
-    # label_train = np.zeros((1, N_train), dtype=np.int16)
-    # label_test  = np.zeros((1, N_test), dtype=np.int16)
     label_train = [0]*N_train
     label_test = [0]*N_test
     cur_train   = 0
@@ -368,11 +368,12 @@ def build_mean_vector(X, Y_range):
         M[:, c] = np.mean(Xc, axis=1)
     return M
 
+
 def train_test_split(dataset, N_train):
     if dataset == 'myARgender':
         fn = pkg_resources.resource_filename('dictol', 'data/'+dataset + '.mat') 
         # fn = os.path.join('data', 'myARgender.pickle')
-        vars_dict = myload(fn)
+        vars_dict = load_mat(fn)
         Y_train = vars_dict['Y_train']
         Y_test = vars_dict['Y_test']
         label_train = vec(vars_dict['label_train']).astype(int)
@@ -389,7 +390,7 @@ def train_test_split(dataset, N_train):
 
     elif dataset == 'myARreduce':
         fn = os.path.join('data', 'AR_EigenFace.pickle')
-        vars_dict = myload(fn)
+        vars_dict = load_mat(fn)
 
         Y_train     = normc(vars_dict['tr_dat'])
         Y_test      = normc(vars_dict['tt_dat'])
@@ -399,7 +400,7 @@ def train_test_split(dataset, N_train):
     elif dataset == 'myFlower':
         dataset = 'myFlower102'
         fn      = os.path.join('data', dataset + '.pickle')
-        vars_dict    = myload(fn)
+        vars_dict    = load_mat(fn)
 
         Y_train     = vars_dict['Y_train']
         Y_test      = vars_dict['Y_test']
@@ -415,8 +416,8 @@ def train_test_split(dataset, N_train):
         Y_test = normc(Y_test)
 
     else:
-        Y_train, label_train, Y_test, label_test = pickTrainTest(dataset, N_train)
-    return (dataset, Y_train, Y_test, label_train, label_test)
+        Y_train, label_train, Y_test, label_test = picl_train_test(dataset, N_train)
+    return (Y_train, Y_test, label_train, label_test)
 
 
 #################### DLCOPAR #######################
@@ -442,32 +443,21 @@ def buildMhat(M, range_row, range_col):
         M2[range_row[c]: range_row[c+1], range_col[c]: range_col[c+1]] *= 2
     return M2
 
-def buildMhat_test():
-    print('------------------------------------------')
-    print('`buildMhat` test: ')
-    d1 = 2
-    d2 = 3
-    C = 2
-    range_row = d1*np.arange(C+1)
-    range_col = d2*np.arange(C+1)
-    M = np.random.randint(3, size = (C*d1, C*d2))
-    print('M =\n', M)
-    print('buildMhat = \n', buildMhat(M, range_row, range_col))
 
 def buildM_2Mbar(X, Y_range, lambda2):
     """
     """
     MM = np.zeros_like(X)
-    C = Y_range.size - 1
-    m = np.mean(X, axis = 1)
+    C = len(Y_range) - 1
+    m = np.mean(X, axis=1)
     for c in range(C):
         Xc = get_block_col(X, c, Y_range)
-        mc = np.mean(Xc, axis = 1)
-        MM[:, Y_range[c]: Y_range[c+1]] = \
-            repmat(lambda2*(m - 2*mc), 1, Y_range[c+1] - Y_range[c])
+        mc = np.mean(Xc, axis=1)
+        MM[:, Y_range[c]: Y_range[c+1]] = repmat(lambda2*(m - 2*mc), 1, Y_range[c+1] - Y_range[c])
     return MM
 
-def build_mean_matrix(X, cols = None):
+
+def build_mean_matrix(X, cols=None):
     """
     repeat np.mean(X, axis = 1) cols times.
 
@@ -480,31 +470,20 @@ def build_mean_matrix(X, cols = None):
     """
     if len(X.shape) < 2 or X.shape[1] == 0:
         return X
-    m = np.mean(X, axis = 1)
-    if cols == None:
-        return repmat(m, 1, X.shape[1])
+    mean_vector = np.mean(X, axis=1)
+    if cols is None:
+        return repmat(mean_vector, 1, X.shape[1])
     else:
-        return np.tile(m, 1, cols)
-
-
-def buildMean(X):
-    return build_mean_matrix(X)
-
-
-def calc_acc(pred, ground_truth):
-    acc = np.sum(pred == ground_truth)/ float(ground_truth.size)
-    return acc
+        return np.tile(mean_vector, cols)
 
 
 def range_delete_ids(a_range, ids):
     """
-    % function new_range = range_delete_ids(a_range, ids)
-    % given a range `a_range` of an array. Suppose we want to delete some
-    % element of that array indexed by `ids`, `new_range` is the new range
+    given a range a_range of an array. Suppose we want to delete some
+    element of that array indexed by `ids`, `new_range` is the new range
     """
     ids = np.sort(ids)
     n = a_range.size
-    # m = ids.size
     a = np.zeros_like(a_range)
     j = 1
     while j < n-1:
@@ -524,17 +503,12 @@ def range_delete_ids_test():
     print(a_range)
     print(range_delete_ids(a_range, ids))
 
-# range_delete_ids_test()
 
 def max_eig(D):
+    """
+    return maximum eigenvalue of matrix D
+    """
     return np.max(LA.eig(D)[0])
-
-def time_estimate(t):
-    h = math.floor(t/3600)
-    t -= 3600*h
-    m = math.floor(t/60)
-    t -= m*60
-    print('| time left: %2dh%2dm%2ds' %(h, m, t))
 
 
 def erase_diagonal(A):
@@ -561,10 +535,6 @@ def inv_IpXY(X, Y):
     Calculate the inverse of matrix A = I + XY.
     if X is a fat matrix (number of columns >> number of rows), then use inv(I + X*Y)
     else: use equation: (I + XY)^(-1) = I - Y*(I + Y*X)^(-1)*X
-    -----------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 4/12/2016
-            (http://www.personal.psu.edu/thv102/)
-    -----------------------------------------------
     """
     d1 = X.shape[0]
     d2 = X.shape[1]
@@ -583,5 +553,3 @@ def progress_str(cur_val, max_val, total_point=50):
 def get_time_str():
     print('Time now: ' + strftime("%m/%d/%Y %H:%M:%S"))
     return strftime("%m%d_%H%M%S")
-
-
