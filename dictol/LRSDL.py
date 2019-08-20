@@ -2,12 +2,13 @@
 Low-rank Shared Dictionary Learning
 and Fisher Discriminant Dictionary Learning
 """
+
 from __future__ import print_function
-import optimize, matlab_syntax
-import utils
-from utils import normF2, norm1, get_block_col, get_block_row, nuclearnorm, build_mean_matrix
+from . import optimize, matlab_syntax
+from . import utils
+from .utils import normF2, norm1, get_block_col, get_block_row, nuclearnorm, build_mean_matrix
 import numpy as np
-from ODL import ODL
+from .ODL import ODL
 
 _zero = np.array([0])
 
@@ -67,13 +68,13 @@ class _UpdateXX0(optimize.Fista):
         """
         cost = 0
         Y = self.Y
-        for c in xrange(self.nclass):
+        for c in range(self.nclass):
             Yc   = get_block_col(Y, c, self.Y_range)
             Dc   = get_block_col(self.D, c, self.D_range)
             Xc   = get_block_row(X, c, self.D_range)
             Xcc  = get_block_col(Xc, c, self.Y_range)
             cost +=normF2(Yc - np.dot(Dc, Xcc))
-            for i in xrange(self.nclass):
+            for i in range(self.nclass):
                 if i == c:
                     continue
                 Xci = get_block_col(Xc, i, self.Y_range)
@@ -87,7 +88,7 @@ class _UpdateXX0(optimize.Fista):
         """
         cost = normF2(X)
         m = np.mean(X, axis = 1)
-        for c in xrange(self.nclass):
+        for c in range(self.nclass):
             Xc   = get_block_col(X, c, self.Y_range)
             Mc   = build_mean_matrix(Xc)
             cost += normF2(Xc - Mc)
@@ -178,7 +179,7 @@ class LRSDL(object):
         where Yhat_c = Yc - Dc*Xcc
         """
         Yhat = np.zeros_like(self.Y)
-        for c in xrange(self.nclass):
+        for c in range(self.nclass):
             Yc = get_block_col(self.Y, c, self.Y_range)
             Dc = get_block_col(self.D, c, self.D_range)
             Xcc = utils.get_block(self.X, c, c, self.D_range, self.Y_range)
@@ -213,13 +214,13 @@ class LRSDL(object):
         """
         cost = 0
         Y = self.Y - np.dot(self.D0, self.X0) if self.k0 > 0 else self.Y.copy()
-        for c in xrange(self.nclass):
+        for c in range(self.nclass):
             Yc   = get_block_col(Y, c, self.Y_range)
             Dc   = get_block_col(self.D, c, self.D_range)
             Xc   = get_block_row(self.X, c, self.D_range)
             Xcc  = get_block_col(Xc, c, self.Y_range)
             cost +=normF2(Yc - np.dot(Dc, Xcc))
-            for i in xrange(self.nclass):
+            for i in range(self.nclass):
                 if i == c:
                     continue
                 Xci = get_block_col(Xc, i, self.Y_range)
@@ -237,7 +238,7 @@ class LRSDL(object):
         """
         cost = normF2(self.X)
         m = np.mean(self.X, axis = 1)
-        for c in xrange(self.nclass):
+        for c in range(self.nclass):
             Xc   = get_block_col(self.X, c, self.Y_range)
             Mc   = build_mean_matrix(Xc)
             cost += normF2(Xc - Mc)

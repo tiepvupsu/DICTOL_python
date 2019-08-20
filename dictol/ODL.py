@@ -1,5 +1,5 @@
 from __future__ import print_function
-import utils, optimize
+from . import utils, optimize
 import numpy as np
 # from numpy import linalg as LA
 

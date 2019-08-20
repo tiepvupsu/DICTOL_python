@@ -1,6 +1,6 @@
 from __future__ import print_function
-import utils
-from optimize import Lasso
+from . import utils
+from .optimize import Lasso
 import numpy as np
 
 

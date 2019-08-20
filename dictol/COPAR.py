@@ -1,7 +1,7 @@
 from __future__ import print_function
-import utils, optimize
+from . import utils, optimize
 import numpy as np
-from ODL import ODL
+from .ODL import ODL
 
 class UpdateXc(optimize.Fista):
     """
@@ -131,7 +131,7 @@ class COPAR(object):
 
             cost1 += utils.normF2(Yc - np.dot(Dc, Xcc) - np.dot(DCp1, XCp1c))
             XX = Xc[: self.D_range_ext[-2], :]
-            XX = np.delete(XX, range(self.D_range_ext[c], self.D_range_ext[c+1]), axis = 0)
+            XX = np.delete(XX, list(range(self.D_range_ext[c], self.D_range_ext[c+1])), axis = 0)
             cost1 += utils.normF2(XX)
 
         cost += cost1 + .5*self.eta*utils.normF2(\
@@ -187,8 +187,8 @@ class COPAR(object):
         Yhat = np.zeros_like(self.Y)
         DCp1 = self._getDc(self.nclass)
         for c in range(self.nclass):
-            Dc_range = range(self.D_range_ext[c], self.D_range_ext[c+1])
-            Yc_range = range(self.Y_range[c], self.Y_range[c+1])
+            Dc_range = list(range(self.D_range_ext[c], self.D_range_ext[c+1]))
+            Yc_range = list(range(self.Y_range[c], self.Y_range[c+1]))
             Yc = self._getYc(c)
             Dc = self._getDc(c)
             Xc = utils.get_block_col(self.X, c, self.Y_range)
@@ -209,7 +209,7 @@ class COPAR(object):
         E = np.dot(Ybar + Yhat, XCp1.T)
         F = 2*np.dot(XCp1, XCp1.T)
         A = self.D[:, : self.D_range_ext[-2]]
-        DCp1_range = range(self.D_range_ext[-2], self.D_range_ext[-1])
+        DCp1_range = list(range(self.D_range_ext[-2], self.D_range_ext[-1]))
         self.D[:, DCp1_range] = optimize.DLSI_updateD(
             self.D[:, DCp1_range], E, F, A.T, self.eta)
         # pass

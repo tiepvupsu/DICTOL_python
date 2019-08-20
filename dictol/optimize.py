@@ -1,6 +1,6 @@
 from __future__ import print_function
 import numpy as np
-import utils
+from . import utils
 from numpy import linalg as LA
 import math
 
@@ -30,7 +30,7 @@ def ODL_updateD(D, E, F, iterations = 100, tol = 1e-8):
     D_old = D.copy()
     it = 0
     for it in range(iterations):
-        for i in xrange(D.shape[1]):
+        for i in range(D.shape[1]):
             if F[i,i] != 0:
                 a = 1.0/F[i,i] * (E[:, i] - D.dot(F[:, i])) + D[:, i]
                 D[:,i] = a/max(LA.norm(a, 2), 1)
@@ -108,8 +108,8 @@ def num_grad(func, X):
     """
     grad = np.zeros_like(X)
     eps = 1e-4
-    for i in xrange(X.shape[0]):
-        for j in xrange(X.shape[1]):
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
             # print X, '\n'
             Xp = X.copy()
             Xm = X.copy()

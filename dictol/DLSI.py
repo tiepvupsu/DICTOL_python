@@ -1,8 +1,8 @@
 from __future__ import print_function
-import utils, optimize
+from . import utils, optimize
 import numpy as np
 # from numpy import linalg as LA
-from ODL import ODL
+from .ODL import ODL
 
 class DLSI(object):
     def __init__(self, k = 10, lambd = 0.01, eta = 0.01, updateD_iters = 100, updateX_iters = 100):
@@ -74,7 +74,7 @@ class DLSI(object):
         Yc = self._getYc(c)
         E = np.dot(Yc, self.X[c].T)
         F = np.dot(self.X[c], self.X[c].T)
-        A = np.delete(self.D, range(self.D_range[c], self.D_range[c+1]), axis = 1).T
+        A = np.delete(self.D, list(range(self.D_range[c], self.D_range[c+1])), axis = 1).T
 
         self.D[:, self.D_range[c]:self.D_range[c+1]] = \
                 optimize.DLSI_updateD(Dc, E, F, A, self.lambd)

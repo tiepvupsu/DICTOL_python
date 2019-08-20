@@ -1,3 +1,4 @@
+
 import math
 # import sys
 import time
@@ -34,7 +35,7 @@ def vec(A):
     return A.flatten(1)
 
 def get_time_str():
-    print 'Time now: ' + strftime("%m/%d/%Y %H:%M:%S")
+    print('Time now: ' + strftime("%m/%d/%Y %H:%M:%S"))
     return strftime("%m%d_%H%M%S")
 
 def myreshape(x, c, r):
@@ -51,16 +52,16 @@ def label_to_range(label):
     C = int(label.max())
     arange = np.zeros((C+1,), dtype=np.int)
     cumsum = 0
-    for i in xrange(C):
+    for i in range(C):
         cumsum += np.where(label == (i+1))[0].size
         arange[i+1] = cumsum
     return arange
 
 def label_to_range_test():
     label = np.array([1, 1, 1, 2, 2, 2, 2, 3, 3])
-    print "---------------------------------------\nLabel_to_range test:"
-    print "label = ", label
-    print "range = ", label_to_range(label)
+    print("---------------------------------------\nLabel_to_range test:")
+    print("label = ", label)
+    print("range = ", label_to_range(label))
     # ouput should be [0, 3, 7, 9]
     # pass
 
@@ -73,15 +74,15 @@ def range_to_label(arange):
     # pass
     C = arange.size - 1
     label = np.ones((arange[-1], ), dtype=np.int)
-    for i in xrange(1, C):
+    for i in range(1, C):
         label[arange[i]: arange[i+1]] *= (i+1)
     return label
 
 def range_to_label_test():
     arange = np.array([0, 3, 5, 9])
-    print "---------------------------------------\n`range_to_label` test:"
-    print "range: ", arange
-    print "label: ", range_to_label(arange)
+    print("---------------------------------------\n`range_to_label` test:")
+    print("range: ", arange)
+    print("label: ", range_to_label(arange))
 
 def get_block_col(M, C, col_range):
     """
@@ -99,19 +100,19 @@ def get_block_col(M, C, col_range):
     if isinstance(C, list) or isinstance(C, (np.ndarray, np.generic)):
         ids = []
         for c in C:
-            ids = ids + range(col_range[c], col_range[c+1])
+            ids = ids + list(range(col_range[c], col_range[c+1]))
         return M[:, ids]
 
 
 
 
 def get_block_col_test():
-    print "---------------------------------------\n`get_block_col test:"
+    print("---------------------------------------\n`get_block_col test:")
     A = np.random.randint(5, size=(3, 9))
     arange = np.array([0, 4, 7, 9], dtype = np.int)
-    print " A: \n", A
-    print " arange: ", arange
-    print " get_block_col(A, [1, 2], arange): \n", get_block_col(A, [1, 2], arange)
+    print(" A: \n", A)
+    print(" arange: ", arange)
+    print(" get_block_col(A, [1, 2], arange): \n", get_block_col(A, [1, 2], arange))
 
 def get_block_row(M, C, row_range):
     """
@@ -130,16 +131,16 @@ def get_block_row(M, C, row_range):
     if isinstance(C, list) or isinstance(C, (np.ndarray, np.generic)):
         ids = []
         for c in C:
-            ids = ids + range(row_range[c], row_range[c+1])
+            ids = ids + list(range(row_range[c], row_range[c+1]))
         return M[ids, :].copy()
 
 def get_block_row_test():
-    print "---------------------------------------\n`get_block_row` test:"
+    print("---------------------------------------\n`get_block_row` test:")
     A = np.random.randint(5, size=(9, 3))
     arange = np.array([0, 4, 7, 9], dtype = np.int)
-    print " A: \n", A
-    print " arange: ", arange
-    print " get_block_row(A, [0, 2], arange): \n", get_block_row(A, np.array([0, 2]), arange)
+    print(" A: \n", A)
+    print(" arange: ", arange)
+    print(" get_block_row(A, [0, 2], arange): \n", get_block_row(A, np.array([0, 2]), arange))
 
 
 def get_block(M, i, j, row_range, col_range):
@@ -162,14 +163,14 @@ def get_block(M, i, j, row_range, col_range):
     return M[row_range[i]:row_range[i+1], col_range[j]: col_range[j+1]].copy()
 
 def get_block_test():
-    print "---------------------------------------\n`get_block` test:"
+    print("---------------------------------------\n`get_block` test:")
     A = np.random.randint(5, size=(9, 9))
     row_range = np.array([0, 4, 7, 9], dtype = np.int)
     col_range = np.array([0, 2, 5, 9], dtype = np.int);
-    print " A: \n", A
-    print " row_range: ", row_range, "; col_range: ", col_range
-    print " get_block(A, 1, 2, row_range, col_range): \n", \
-        get_block(A, 1, 2, row_range, col_range)
+    print(" A: \n", A)
+    print(" row_range: ", row_range, "; col_range: ", col_range)
+    print(" get_block(A, 1, 2, row_range, col_range): \n", \
+        get_block(A, 1, 2, row_range, col_range))
 
 
 
@@ -187,10 +188,10 @@ def norm1(X):
 def norm1_test():
     # pass
     print('---------------------------------------')
-    print '`norm1` test:'
+    print('`norm1` test:')
     A = np.random.randint(8, size =(2,2)) - 3
-    print "A = \n", A
-    print "norm1(A) = ", norm1(A)
+    print("A = \n", A)
+    print("norm1(A) = ", norm1(A))
 
 def normF2(X):
     """
@@ -205,10 +206,10 @@ def normF2(X):
 
 def normF2_test():
     print('---------------------------------------')
-    print '`normF2` test:'
+    print('`normF2` test:')
     A = np.random.randint(8, size =(2,2)) - 5
-    print "A = \n", A
-    print "normF2(A) = ", normF2(A)
+    print("A = \n", A)
+    print("normF2(A) = ", normF2(A))
 
 def is_vector(x):
     """
@@ -312,7 +313,7 @@ class MyForm:
 
 def MyForm_test():
     print('-------------------------------------------')
-    print '`MyForm` test:'
+    print('`MyForm` test:')
     d = 20
     k = 50
     M = np.random.randint(10, size = (d, d))
@@ -327,26 +328,26 @@ def MyForm_test():
     Q = MyForm(A, B, k)
 
     # Multiplication test
-    print '1. Multiplication test...',
+    print('1. Multiplication test...', end=' ')
     dif = LA.norm(np.dot(Q.full_express(),P.full_express()) - \
         Q.mult(P).full_express())
     if dif < 1e-8:
-        print 'diff =', dif, '\n   ...PASS'
+        print('diff =', dif, '\n   ...PASS')
     else:
-        print 'diff =', dif, '\n   ...FAIL'
+        print('diff =', dif, '\n   ...FAIL')
 
     # Inverse test
-    print '2. Inverse test ...',
+    print('2. Inverse test ...', end=' ')
     X = LA.inv(P.full_express())
     Y = P.inv()
     dif = LA.norm(X - Y.full_express())
     if dif < 1e-8:
-        print 'diff =', dif, '\n   ...PASS'
+        print('diff =', dif, '\n   ...PASS')
     else:
-        print 'diff =', dif, '\n   ...FAIL'
+        print('diff =', dif, '\n   ...FAIL')
 
     # vector multiplication
-    print '3. Multiplication with vector...',
+    print('3. Multiplication with vector...', end=' ')
     x = np.random.randint(3, size =(d*k,))
     # print x
     # print P.full_express()
@@ -357,20 +358,20 @@ def MyForm_test():
     # print 'computed\n', z
     dif = LA.norm(y - z)
     if dif < 1e-8:
-        print 'diff =', dif, '\n   ...PASS'
+        print('diff =', dif, '\n   ...PASS')
     else:
-        print 'diff =', dif, '\n   ...FAIL'
+        print('diff =', dif, '\n   ...FAIL')
 
 
 def randperm(n):
-    return np.random.permutation(xrange(n))
+    return np.random.permutation(list(range(n)))
 
 def randperm_test():
     n = 10
-    print randperm(n)
+    print(randperm(n))
 
 def get_range(arange, c):
-    return xrange(arange[c], arange[c+1])
+    return list(range(arange[c], arange[c+1]))
 
 def pickDfromY(Y, Y_range, D_range):
     """
@@ -378,7 +379,7 @@ def pickDfromY(Y, Y_range, D_range):
     """
     C = Y_range.size - 1
     D = np.zeros((Y.shape[0], D_range[-1]))
-    for c in xrange(C):
+    for c in range(C):
         Yc = get_block_col(Y, c, Y_range)
         N_c = Yc.shape[1]
         # print Yc
@@ -391,16 +392,16 @@ def pickDfromY(Y, Y_range, D_range):
 
 def pickDfromY_test():
     print ('----------------------------------')
-    print 'Test `pickDfromY`......'
+    print('Test `pickDfromY`......')
     d = 2
     n = 10
     Y = np.random.randint(10, size=(d, n))
-    print Y
+    print(Y)
     Y_range = np.array([0, 4, 10])
     D_range = np.array([0, 2, 5])
     D = pickDfromY(Y, Y_range, D_range)
     # print Y_range
-    print D
+    print(D)
 
 
 def myload(filename):
@@ -430,7 +431,7 @@ def pickTrainTest(dataset, N_train_c):
     label_test  = np.zeros((1, N_test))
     cur_train   = 0
     cur_test    = 0
-    for c in xrange(C):
+    for c in range(C):
         Yc        = get_block_col(Y, c, Y_range)
         N_total_c = Yc.shape[1]
         N_test_c  = N_total_c - N_train_c
@@ -455,7 +456,7 @@ def pickTrainTest(dataset, N_train_c):
 
 def range_reduce(D_range, bad_ids):
     C = D_range.size - 1
-    for c in xrange(C):
+    for c in range(C):
         cumk = D_range[c+1]
         e = cumk - np.nonzero(bad_ids < cumk)[0].size
         D_range[c+1] = e
@@ -463,9 +464,9 @@ def range_reduce(D_range, bad_ids):
 def range_reduce_test():
     D_range = np.array([0, 4, 8, 13])
     bad_ids = np.array([1, 5, 7, 9, 10])
-    print D_range, bad_ids
+    print(D_range, bad_ids)
     range_reduce(D_range, bad_ids)
-    print D_range
+    print(D_range)
 
 # range_reduce_test()
 def build_mean_vector(X, Y_range):
@@ -477,7 +478,7 @@ def build_mean_vector(X, Y_range):
     """
     C = Y_range.size -1
     M = np.zeros((X.shape[0], C))
-    for c in xrange(C):
+    for c in range(C):
         Xc = get_block_col(X, c, Y_range)
         M[:, c] = np.mean(Xc, axis=1)
     return M
@@ -556,21 +557,21 @@ def buildMhat(M, range_row, range_col):
     """
     C = len(range_row) - 1
     M2 = M.copy()
-    for c in xrange(C):
+    for c in range(C):
         M2[range_row[c]: range_row[c+1], range_col[c]: range_col[c+1]] *= 2
     return M2
 
 def buildMhat_test():
-    print '------------------------------------------'
-    print '`buildMhat` test: '
+    print('------------------------------------------')
+    print('`buildMhat` test: ')
     d1 = 2
     d2 = 3
     C = 2
     range_row = d1*np.arange(C+1)
     range_col = d2*np.arange(C+1)
     M = np.random.randint(3, size = (C*d1, C*d2))
-    print 'M =\n', M
-    print 'buildMhat = \n', buildMhat(M, range_row, range_col)
+    print('M =\n', M)
+    print('buildMhat = \n', buildMhat(M, range_row, range_col))
 
 def buildM_2Mbar(X, Y_range, lambda2):
     """
@@ -578,7 +579,7 @@ def buildM_2Mbar(X, Y_range, lambda2):
     MM = np.zeros_like(X)
     C = Y_range.size - 1
     m = np.mean(X, axis = 1)
-    for c in xrange(C):
+    for c in range(C):
         Xc = get_block_col(X, c, Y_range)
         mc = np.mean(Xc, axis = 1)
         MM[:, Y_range[c]: Y_range[c+1]] = \
@@ -623,7 +624,7 @@ def range_delete_ids(a_range, ids):
     a = np.zeros_like(a_range)
     j = 1
     while j < n-1:
-        for i in xrange(n):
+        for i in range(n):
             while a_range[j] < ids[i]:
                 j += 1
             for k in range(j, n):
@@ -635,8 +636,8 @@ def range_delete_ids(a_range, ids):
 def range_delete_ids_test():
     a_range = np.array([0, 3, 5, 10])
     ids = np.array([1, 4, 7, 10])
-    print a_range
-    print range_delete_ids(a_range, ids)
+    print(a_range)
+    print(range_delete_ids(a_range, ids))
 
 # range_delete_ids_test()
 
@@ -648,11 +649,11 @@ def time_estimate(t):
     t -= 3600*h
     m = math.floor(t/60)
     t -= m*60
-    print '| time left: %2dh%2dm%2ds' %(h, m, t)
+    print('| time left: %2dh%2dm%2ds' %(h, m, t))
 
 def erase_diagonal(A):
     if A.shape[0] != A.shape[1]:
-        print 'The input matrix is not square!'
+        print('The input matrix is not square!')
         return
     B = A.copy()
     np.fill_diagonal(B, 0)
@@ -660,10 +661,10 @@ def erase_diagonal(A):
 
 def erase_diagonal_blocks(A, row_range, col_range):
     if len(row_range) != len(col_range):
-        print 'no. of column blocks != no. of row blocks!!'
+        print('no. of column blocks != no. of row blocks!!')
     C = len(row_range) - 1
     B = A.copy()
-    for c in xrange(C):
+    for c in range(C):
         B[row_range[c]: row_range[c+1], col_range[c]: col_range[c+1]] = 0
     return B
 
@@ -693,13 +694,13 @@ def inv_IpXY_test():
     t1 = time.time()
     A = LA.inv(np.eye(d1)+ np.dot(X,Y))
     t2 = time.time()
-    print 't1 = ', t2 - t1
+    print('t1 = ', t2 - t1)
     #
     t1 = time.time()
     B = inv_IpXY(X, Y)
     t2 = time.time()
-    print 't2 = ', t2 - t1
-    print 'diff = ', normF2(A - B)
+    print('t2 = ', t2 - t1)
+    print('diff = ', normF2(A - B))
 
 def progress_str(cur_val, max_val, total_point=50):
     p = int(math.ceil(float(cur_val)*total_point/ max_val))
