@@ -4,8 +4,5 @@
 MANIFEST.in
 setup.py
 dist/
-tags
 dictol.egg-info/
 build/
-.vscode
-main.py

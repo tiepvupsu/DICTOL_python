@@ -1,4 +1,4 @@
-__version__ = '0.1.1'
+__version__ = '0.0.7'
 def demo():
     from dictol import SRC, ODL, DLSI, COPAR, LRSDL, utils
     # mini test: 5 training samples per class
