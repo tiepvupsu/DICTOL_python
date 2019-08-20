@@ -1,10 +1,11 @@
 from __future__ import print_function
 from . import utils
 from .optimize import Lasso
+from . import base
 import numpy as np
 
 
-class SRC(object):
+class SRC(base.BaseModel):
     def __init__(self, lamb=0.01):
         self.lamb = lamb
         self.D = None
@@ -17,7 +18,7 @@ class SRC(object):
         self.train_range = utils.label_to_range(label_train)
         self.num_classes = len(self.train_range) - 1
 
-    def predict(self, Y, verbose=True, iterations=100):
+    def predict(self, Y, iterations=100):
         lasso = Lasso(self.D, self.lamb)
         lasso.fit(Y, iterations=iterations)
         X = lasso.coef_
@@ -26,14 +27,8 @@ class SRC(object):
             Xi = utils.get_block_row(X, i, self.train_range)
             Di = utils.get_block_col(self.D, i, self.train_range)
             R = Y - np.dot(Di, Xi)
-            E[i,:] = (R*R).sum(axis=0)
+            E[i, :] = (R*R).sum(axis=0)
         return utils.vec(np.argmin(E, axis=0) + 1)
-
-    def evaluate(self, Y_test, label_test):
-        pred = self.predict(Y_test)
-        acc = np.sum(pred == label_test)/float(len(label_test))
-        print('accuracy = {:.2f} %'.format(100 * acc))
-        return acc
 
 
 def mini_test_unit():
@@ -42,9 +37,9 @@ def mini_test_unit():
     dataset = 'myYaleB'
     N_train = 2
     Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
-    clf = SRC(lamb=0.01)
-    clf.fit(Y_train, label_train)
-    clf.evaluate(Y_test, label_test)
+    src = SRC(lamb=0.01)
+    src.fit(Y_train, label_train)
+    src.evaluate(Y_test, label_test)
 
 
 if __name__ == '__main__':

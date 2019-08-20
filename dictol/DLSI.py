@@ -1,10 +1,9 @@
 from __future__ import print_function
-from . import utils, optimize
+from . import utils, optimize, base
 import numpy as np
-# from numpy import linalg as LA
 from .ODL import ODL
 
-class DLSI(object):
+class DLSI(base.BaseModel):
     def __init__(self, k=10, lambd=0.01, eta=0.01, updateD_iters=100, updateX_iters=100):
         self.lambd = 0.01
         self.eta = 0.01
@@ -58,7 +57,7 @@ class DLSI(object):
 
     def _updateXc(self, c):
         lasso = optimize.Lasso(self._getDc(c), self.lambd)
-        lasso.fit(self._getYc(c), Xinit = self.X[c])
+        lasso.fit(self._getYc(c), Xinit=self.X[c])
         self.X[c] = lasso.coef_
 
     def _updateX(self):
@@ -74,7 +73,7 @@ class DLSI(object):
         Yc = self._getYc(c)
         E = np.dot(Yc, self.X[c].T)
         F = np.dot(self.X[c], self.X[c].T)
-        A = np.delete(self.D, list(range(self.D_range[c], self.D_range[c+1])), axis = 1).T
+        A = np.delete(self.D, list(range(self.D_range[c], self.D_range[c+1])), axis=1).T
 
         self.D[:, self.D_range[c]:self.D_range[c+1]] = optimize.DLSI_updateD(Dc, E, F, A, self.lambd)
 
@@ -85,8 +84,12 @@ class DLSI(object):
             Xc = self.X[c]
             Dc = utils.get_block_col(self.D, c, self.D_range)
             cost += 0.5*utils.normF2(Yc - np.dot(Dc, Xc)) + self.lambd*utils.norm1(Xc)
-        cost += 0.5*self.eta*utils.normF2(\
-                utils.erase_diagonal_blocks(np.dot(self.D.T, self.D), self.D_range, self.D_range))
+
+        cost += 0.5*self.eta*utils.normF2(utils.erase_diagonal_blocks(
+            np.dot(self.D.T, self.D),
+            self.D_range,
+            self.D_range
+        ))
         return cost
 
     def predict(self, Y):
@@ -97,22 +100,15 @@ class DLSI(object):
             lasso.fit(Y)
             Xc = lasso.coef_
             R1 = Y - np.dot(Dc, Xc)
-            E[c, :] = 0.5*(R1*R1).sum(axis = 0) + self.lambd*abs(Xc).sum(axis = 0)
-        return np.argmin(E, axis = 0) + 1
-
-    def evaluate(self, Y_test, label_test, metrics = ['accuracy']):
-        print('evaluating...')
-        pred = self.predict(Y_test)
-        acc = np.sum(pred == label_test)/float(len(label_test))
-        print('accuracy = %.2f'%(100*acc))
-        return acc
+            E[c, :] = 0.5*(R1*R1).sum(axis=0) + self.lambd*abs(Xc).sum(axis=0)
+        return np.argmin(E, axis=0) + 1
 
 
 def mini_test_unit():
     """
     mini test on simulated data
     """
-    print('\n===================================================================')
+    print('\n================================================================')
     print('Mini Unit test: DLSI')
     dataset = 'myYaleB'
     N_train = 5

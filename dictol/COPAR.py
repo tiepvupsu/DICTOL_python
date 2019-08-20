@@ -1,5 +1,5 @@
 from __future__ import print_function
-from . import utils, optimize
+from . import utils, optimize, base
 import numpy as np
 from .ODL import ODL
 
@@ -85,7 +85,7 @@ class UpdateXc(optimize.Fista):
         return self._calc_f(Xc) + utils.norm1(Xc)
 
 
-class COPAR(object):
+class COPAR(base.BaseModel):
     def __init__(self, k, k0, lambd = 0.01, eta = 0.0001, updateX_iters = 100, updateD_iters = 100):
         self.k = k
         self.k0 = k0
@@ -221,15 +221,6 @@ class COPAR(object):
             R1 = Y - np.dot(Dc, Xc)
             E[c, :] = 0.5*(R1*R1).sum(axis=0) + self.lambd*abs(Xc).sum(axis=0)
         return np.argmin(E, axis=0) + 1
-
-    def evaluate(self, Y_test, label_test, metrics=['accuracy']):
-        # TODO: abstract this
-        print('evaluating...')
-        pred = self.predict(Y_test)
-        # TODO: use scikit learn
-        acc = np.sum(pred == label_test)/float(len(label_test))
-        print('accuracy = %.2f' % (100*acc))
-        return acc
 
 
 def mini_test_unit():

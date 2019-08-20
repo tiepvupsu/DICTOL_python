@@ -4,8 +4,8 @@ and Fisher Discriminant Dictionary Learning
 """
 
 from __future__ import print_function
-from . import optimize, matlab_syntax
-from . import utils
+from . import optimize
+from . import utils, base
 from .utils import normF2, norm1, get_block_col, get_block_row, nuclearnorm, build_mean_matrix
 import numpy as np
 from .ODL import ODL
@@ -19,7 +19,7 @@ class _UpdateXX0(optimize.Fista):
     def __init__(self, Y, Y_range, D, D_range, D0, k0, lambd=0.01, lambd2=0.01):
         self.Y = Y
         self.Y_range = Y_range
-        self.nclass = len(Y_range) - 1
+        self.num_classes = len(Y_range) - 1
         self.D = D
         self.D_range = D_range
         self.D0 = D0
@@ -64,13 +64,13 @@ class _UpdateXX0(optimize.Fista):
         """
         cost = 0
         Y = self.Y
-        for c in range(self.nclass):
-            Yc  = get_block_col(Y, c, self.Y_range)
-            Dc  = get_block_col(self.D, c, self.D_range)
-            Xc  = get_block_row(X, c, self.D_range)
+        for c in range(self.num_classes):
+            Yc = get_block_col(Y, c, self.Y_range)
+            Dc = get_block_col(self.D, c, self.D_range)
+            Xc = get_block_row(X, c, self.D_range)
             Xcc = get_block_col(Xc, c, self.Y_range)
             cost += normF2(Yc - np.dot(Dc, Xcc))
-            for i in range(self.nclass):
+            for i in range(self.num_classes):
                 if i == c:
                     continue
                 Xci = get_block_col(Xc, i, self.Y_range)
@@ -84,11 +84,11 @@ class _UpdateXX0(optimize.Fista):
         """
         cost = normF2(X)
         m = np.mean(X, axis=1)
-        for c in range(self.nclass):
-            Xc  = get_block_col(X, c, self.Y_range)
-            Mc  = build_mean_matrix(Xc)
+        for c in range(self.num_classes):
+            Xc = get_block_col(X, c, self.Y_range)
+            Mc = build_mean_matrix(Xc)
             cost += normF2(Xc - Mc)
-            M  = matlab_syntax.repmat(m, 1, Xc.shape[1])
+            M = utils.repmat(m, 1, Xc.shape[1])
             cost -= normF2(Mc - M)
         return cost
 
@@ -96,14 +96,14 @@ class _UpdateXX0(optimize.Fista):
         X, X0 = self._extract_fromX1(X1)
         Ybar = self.Y - np.dot(self.D0, X0)
         cost = 0.5*(normF2(Ybar - np.dot(self.D, X)) + self._fidelity(X)) + \
-                0.5*self.lambd2*self._discriminative(X) + normF2(X0 - utils.build_mean_matrix(X0))
+            0.5*self.lambd2*self._discriminative(X) + normF2(X0 - utils.build_mean_matrix(X0))
         return cost
 
     def lossF(self, X1):
         return self._calc_f(X1) + self.lambd*norm1(X1)
 
 
-class LRSDL(object):
+class LRSDL(base.BaseModel):
     def __init__(self, lambd=0.01, lambd2=0.01, eta=0.0001,
             k=10, k0=5, updateX_iters=100, updateD_iters=100):
         self.lambd = lambd
@@ -127,8 +127,8 @@ class LRSDL(object):
 
     def fit(self, Y, train_label, verbose=False, iterations=100, show_after=5):
         self.Y_range = utils.label_to_range(train_label)
-        self.nclass = len(self.Y_range) - 1
-        self.D_range = [self.k*i for i in range(self.nclass+1)]
+        self.num_classes = len(self.Y_range) - 1
+        self.D_range = [self.k*i for i in range(self.num_classes+1)]
         self.Y = Y
         self.D = np.zeros((self.Y.shape[0], self.D_range[-1]))
         self.X = np.zeros((self.D_range[-1], self.Y.shape[1]))
@@ -178,7 +178,7 @@ class LRSDL(object):
         where Yhat_c = Yc - Dc*Xcc
         """
         Yhat = np.zeros_like(self.Y)
-        for c in range(self.nclass):
+        for c in range(self.num_classes):
             Yc = get_block_col(self.Y, c, self.Y_range)
             Dc = get_block_col(self.D, c, self.D_range)
             Xcc = utils.get_block(self.X, c, c, self.D_range, self.Y_range)
@@ -191,7 +191,7 @@ class LRSDL(object):
         self.D0 = optimize.min_rank_dict(L, self.X0, self.eta/2, Dinit=self.D0, iterations=50)
 
     def _initialize(self):
-        for c in range(self.nclass):
+        for c in range(self.num_classes):
             clf = ODL(lambd=self.lambd, k=self.D_range[c+1] - self.D_range[c])
             clf.fit(self._getYc(c), iterations=5)
             self.D[:, self.D_range[c]:self.D_range[c+1]] = clf.D
@@ -211,13 +211,13 @@ class LRSDL(object):
         """
         cost = 0
         Y = self.Y - np.dot(self.D0, self.X0) if self.k0 > 0 else self.Y.copy()
-        for c in range(self.nclass):
+        for c in range(self.num_classes):
             Yc = get_block_col(Y, c, self.Y_range)
             Dc = get_block_col(self.D, c, self.D_range)
             Xc = get_block_row(self.X, c, self.D_range)
             Xcc = get_block_col(Xc, c, self.Y_range)
             cost += normF2(Yc - np.dot(Dc, Xcc))
-            for i in range(self.nclass):
+            for i in range(self.num_classes):
                 if i == c:
                     continue
                 Xci = get_block_col(Xc, i, self.Y_range)
@@ -235,11 +235,11 @@ class LRSDL(object):
         """
         cost = normF2(self.X)
         m = np.mean(self.X, axis=1)
-        for c in range(self.nclass):
+        for c in range(self.num_classes):
             Xc = get_block_col(self.X, c, self.Y_range)
             Mc = build_mean_matrix(Xc)
             cost += normF2(Xc - Mc)
-            M = matlab_syntax.repmat(m, 1, Xc.shape[1])
+            M = utils.repmat(m, 1, Xc.shape[1])
             cost -= normF2(Mc - M)
         return cost
 
@@ -260,8 +260,8 @@ class LRSDL(object):
 
     def predict(self, Y):
         N = Y.shape[1]
-        E = np.zeros((self.nclass, N))
-        for c in range(self.nclass):
+        E = np.zeros((self.num_classes, N))
+        for c in range(self.num_classes):
             # Dc in D only
             Dc_ = get_block_col(self.D, c, self.D_range)
             # Dc in D and D0
@@ -269,61 +269,55 @@ class LRSDL(object):
             lasso = optimize.Lasso(Dc, lambd=self.lambd)
             lasso.fit(Y)
             Xc = lasso.solve()
-            R = Y - np.dot(Dc, Xc)
-            E[c, :] = 0.5*np.sum(R*R, axis=0) + self.lambd*np.sum(np.abs(Xc), axis=0)
+            residual_matrix = Y - np.dot(Dc, Xc)
+            E[c, :] = 0.5*np.sum(residual_matrix*residual_matrix, axis=0) +\
+                self.lambd*np.sum(np.abs(Xc), axis=0)
         pred = np.argmin(E, axis=0) + 1
         return pred
 
-    def evaluate(self, Y_test, label_test):
-        print('evaluating...')
-        pred = self.predict(Y_test)
-        acc = np.sum(pred == label_test)/float(len(label_test))
-        print('accuracy = %.2f' % (100*acc))
-        return acc
-
 
 def mini_test_unit():
-    print('\n===================================================================')
+    print('\n================================================================')
     print('Mini Unit test: Low-rank shared Dictionary Learning')
     dataset = 'myYaleB'
     N_train = 5
     Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
-    clf = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=4, k0=5)
-    clf.fit(Y_train, label_train, iterations=30, verbose=True)
-    clf.evaluate(Y_test, label_test)
+    lrsdl = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=4, k0=5)
+    lrsdl.fit(Y_train, label_train, iterations=30, verbose=True)
+    lrsdl.evaluate(Y_test, label_test)
 
 
 def mini_test_unit_FDDL():
-    print('\n===================================================================')
+    print('\n================================================================')
     print('Mini Unit test: Fisher Disrciminant Dicationary Learning')
     dataset = 'myYaleB'
     N_train = 5
     Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
-    clf = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=4, k0=0)
-    clf.fit(Y_train, label_train, iterations=30, verbose=True)
-    clf.evaluate(Y_test, label_test)
+    lrsdl = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=4, k0=0)
+    lrsdl.fit(Y_train, label_train, iterations=30, verbose=True)
+    lrsdl.evaluate(Y_test, label_test)
 
 
 def test_unit_FDDL():
-    print('\n===================================================================')
+    print('\n================================================================')
     print('Unit test: Fisher Disrciminant Dicationary Learning')
     dataset = 'myYaleB'
     N_train = 30
     Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
-    clf = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=20, k0=0)
-    clf.fit(Y_train, label_train, iterations=30, verbose=True)
-    clf.evaluate(Y_test, label_test)
+    lrsdl = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=20, k0=0)
+    lrsdl.fit(Y_train, label_train, iterations=30, verbose=True)
+    lrsdl.evaluate(Y_test, label_test)
 
 
 def test_unit():
-    print('\n===================================================================')
+    print('\n================================================================')
     print('Unit test: Low-rank shared Dictionary Learning')
     dataset = 'myYaleB'
     N_train = 30
     Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
-    clf = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=20, k0=10)
-    clf.fit(Y_train, label_train, iterations=30, verbose=True)
-    clf.evaluate(Y_test, label_test)
+    lrsdl = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=20, k0=10)
+    lrsdl.fit(Y_train, label_train, iterations=30, verbose=True)
+    lrsdl.evaluate(Y_test, label_test)
 
 
 if __name__ == '__main__':
@@ -331,4 +325,3 @@ if __name__ == '__main__':
     mini_test_unit()
     test_unit_FDDL()
     test_unit()
-
