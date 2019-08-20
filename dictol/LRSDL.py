@@ -224,10 +224,6 @@ class LRSDL(base.BaseModel):
                 cost += normF2(np.dot(Dc, Xci))
         return cost
 
-    def _coefMM0(self):
-        X1 = self.X if self.k0 == 0 else np.vstack((self.X, self.X0))
-        return utils.build_mean_vector(X1, self.Y_range)
-
     def _discriminative(self):
         """
         * calculating the discriminative term in FDDL[[4]](#fn_fdd):
