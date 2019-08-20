@@ -3,11 +3,25 @@ from . import utils
 from qcore.asserts import assert_eq
 
 
-def test_label_to_range():
-    label = np.array([1, 1, 1, 2, 2, 2, 2, 3, 3])
-    got_range = utils.label_to_range(label)
-    expected_range = [0, 3, 7, 9]
-    np.testing.assert_array_equal(expected_range, got_range)
+class TestLabelToRange(object):
+    def test_1(self):
+        label = [1, 1, 1, 2, 2, 2, 2, 3, 3]
+        got_range = utils.label_to_range(label)
+        expected_range = [0, 3, 7, 9]
+        np.testing.assert_array_equal(expected_range, got_range)
+
+    def test_2(self):
+        label = [1, 2, 3]
+        got_range = utils.label_to_range(label)
+        expected_range = [0, 1, 2, 3]
+        np.testing.assert_array_equal(expected_range, got_range)
+
+    def test_raise_if_not_consecutive_1(self):
+        pass
+        # label = [0, 0, 1, 1]
+
+
+
 
 
 def test_range_to_label():

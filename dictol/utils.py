@@ -34,14 +34,19 @@ def label_to_range(label):
         - `label`: a numpy array
         - `arange`: a numpy array
     """
-    # TODO: add assertion if input does not follow the form
-    C = int(max(label))
-    arange = np.zeros((C+1,), dtype=np.int)
-    cumsum = 0
-    for i in range(C):
-        cumsum += np.where(label == (i+1))[0].size
-        arange[i+1] = cumsum
-    return list(arange)
+    res = [0]
+    assert label[0] == 1, 'label must start with 1'
+    for i in range(1, len(label)):
+        if label[i] == label[i-1]:
+            continue
+        if label[i] == label[i-1] + 1:
+            res.append(i)
+        else:
+            assert False,\
+                ('label[{}] and label[{}] must be equal or two consecutive '
+                 'integers, got {} and {}').format(i-1, i, label[i-1], label[i])
+    res.append(len(label))
+    return res
 
 
 def range_to_label(arange):
@@ -299,9 +304,7 @@ def pickTrainTest(dataset, N_train_c):
         N_total_c = Yc.shape[1]
         N_test_c  = N_total_c - N_train_c
         label_train[cur_train: cur_train + N_train_c] = [c+1]*N_train_c
-            # (c+1)*np.ones((1, N_train_c))
         label_test[cur_test:cur_test + N_test_c] = [c+1]*N_test_c
-        # (c+1)*np.ones((1, N_test_c))
 
         ids = randperm(N_total_c)
 
@@ -380,7 +383,7 @@ def train_test_split(dataset, N_train):
         label_train = vec(vars_dict['label_train'])
         label_test  = vec(vars_dict['label_test'])
         range_train = label_to_range(label_train)
-        num_classes = range_train.size - 1
+        num_classes = len(range_train) - 1
         new_range_train = N_train * np.arange(num_classes + 1)
         label_train = range_to_label(new_range_train)
         Y_train = pickDfromY(Y_train, range_train, new_range_train)
@@ -390,7 +393,6 @@ def train_test_split(dataset, N_train):
 
     else:
         Y_train, label_train, Y_test, label_test = pickTrainTest(dataset, N_train)
-    __import__('pdb').set_trace()
     return (dataset, Y_train, Y_test, label_train, label_test)
 
 
