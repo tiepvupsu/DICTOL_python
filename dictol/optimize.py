@@ -4,36 +4,32 @@ from . import utils
 from numpy import linalg as LA
 import math
 
-def ODL_updateD(D, E, F, iterations = 100, tol = 1e-8):
+def ODL_updateD(D, E, F, iterations=100, tol=1e-8):
     """
-    * The main algorithm in ODL.
-    * Solving the optimization problem:
-      `D = arg min_D -2trace(E'*D) + trace(D*F*D')` subject to: `||d_i||_2 <= 1`,
-         where `F` is a positive semidefinite matrix.
-    * Syntax `[D, iter] = ODL_updateD(D, E, F, opts)`
-      - INPUT:
-        + `D, E, F` as in the above problem.
-        + `opts`. options:
-          * `iterations`: maximum number of iterations.
-          * `tol`: when the difference between `D` in two successive
-                    iterations less than this value, the algorithm will stop.
-      - OUTPUT:
-        + `D`: solution.
-    -----------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 04/07/2016
-            (http://www.personal.psu.edu/thv102/)
-    -----------------------------------------------
+    The main algorithm in ODL.
+    Solving the optimization problem:
+      D = arg min_D -2trace(E'*D) + trace(D*F*D') subject to: ||d_i||_2 <= 1,
+         where F is a positive semidefinite matrix.
+
+    Parameters:
+    -----------
+    D, E, F as in the above problem.
+    iterations: maximum number of iterations.
+    tol: when the difference of solutions in two successive
+        iterations less than this value, the algorithm will stop.
+
+    Returns:
+    --------
     """
     def calc_cost(D):
         return -2*np.trace(np.dot(E, D.T)) + np.trace(np.dot(np.dot(F, D.T), D))
 
     D_old = D.copy()
-    it = 0
-    for it in range(iterations):
+    for _ in range(iterations):
         for i in range(D.shape[1]):
-            if F[i,i] != 0:
-                a = 1.0/F[i,i] * (E[:, i] - D.dot(F[:, i])) + D[:, i]
-                D[:,i] = a/max(LA.norm(a, 2), 1)
+            if F[i, i] != 0:
+                a = 1.0/F[i, i] * (E[:, i] - D.dot(F[:, i])) + D[:, i]
+                D[:, i] = a/max(LA.norm(a, 2), 1)
 
         if LA.norm(D - D_old, 'fro')/D.size < tol:
             break
@@ -41,7 +37,7 @@ def ODL_updateD(D, E, F, iterations = 100, tol = 1e-8):
     return D
 
 
-def DLSI_updateD(D, E, F, A, lambda1, verbose = False, iterations = 100):
+def DLSI_updateD(D, E, F, A, lambda1, iterations=100):
     """
     def DLSI_updateD(D, E, F, A, lambda1, verbose = False, iterations = 100):
     problem: `D = argmin_D -2trace(ED') + trace(FD'*D) + lambda *||A*D||F^2,`
@@ -63,22 +59,19 @@ def DLSI_updateD(D, E, F, A, lambda1, verbose = False, iterations = 100):
     `Z = B*rhoV` with `B = (2*lambda*A'*A + rho I)^{-1}`
     `U = U + D - Z`
     -----------------------------------------------
-    Author: Tiep Vu, thv102@psu.edu, 5/11/2016
-            (http://www.personal.psu.edu/thv102/)
-    -----------------------------------------------
     """
     def calc_cost(D):
         cost = -2*np.trace(np.dot(E, D.T)) + np.trace(np.dot(F, np.dot(D.T, D))) +\
             lambda1*utils.normF2(np.dot(A, D))
         return cost
-    it    = 0
-    rho   = 1.0
+    it = 0
+    rho = 1.0
     Z_old = D.copy()
-    U     = np.zeros_like(D)
-    I_k   = np.eye(D.shape[1])
-    X     = 2*lambda1/rho*A.T
-    Y     = A.copy()
-    B1    = np.dot(X, utils.inv_IpXY(Y, X))
+    U = np.zeros_like(D)
+    I_k = np.eye(D.shape[1])
+    X = 2*lambda1/rho*A.T
+    Y = A.copy()
+    B1 = np.dot(X, utils.inv_IpXY(Y, X))
 
     # B1 = np.dot(X, LA.inv(eye(Y.shape[0]) + np.dot(Y, X)))
     tol = 1e-8
@@ -90,16 +83,17 @@ def DLSI_updateD(D, E, F, A, lambda1, verbose = False, iterations = 100):
         F2 = F + rho/2*I_k
         D  = ODL_updateD(D, E2, F2)
         # update Z
-        V     = D + U
+        V = D + U
         Z_new = rho*(V - np.dot(B1, np.dot(Y, V)))
-        e1    = utils.normF2(D - Z_new)
-        e2    = rho*utils.normF2(Z_new - Z_old)
+        e1 = utils.normF2(D - Z_new)
+        e2 = rho*utils.normF2(Z_new - Z_old)
         if e1 < tol and e2 < tol:
             break
-        U     = U + D - Z_new
+        U = U + D - Z_new
         Z_old = Z_new.copy()
 
     return D
+
 
 def num_grad(func, X):
     """
@@ -108,18 +102,21 @@ def num_grad(func, X):
     """
     grad = np.zeros_like(X)
     eps = 1e-4
+    # TODO: flatten then unflatten, make it independent on X.shape
+    # the current implementation only work with 2-d array
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
             # print X, '\n'
             Xp = X.copy()
             Xm = X.copy()
-            Xp[i,j] += eps
+            Xp[i, j] += eps
             # print X
             fp = func(Xp)
-            Xm[i,j] -= eps
+            Xm[i, j] -= eps
             fm = func(Xm)
-            grad[i,j] = (fp - fm)/(2*eps)
+            grad[i, j] = (fp - fm)/(2*eps)
     return grad
+
 
 def check_grad(func, grad, X):
     print('Checking grad...',)
@@ -132,6 +129,7 @@ def check_grad(func, grad, X):
     else:
         print('Different = %f' %dif, 'FAIL')
     return dif < 1e-5
+
 
 def min_rank_dict(Y, X, lambdaD, Dinit, iterations = 100, tol = 1e-8):
     """
@@ -188,11 +186,11 @@ def min_rank_dict(Y, X, lambdaD, Dinit, iterations = 100, tol = 1e-8):
         D_new = ODL_updateD(D_old, E, F, iterations = 30)
         ## ========= update J ==============================
         # J^{k+1} = argminJ lambdaD||J||_* + rho/2||J - D + U||
-        J_new = np.real(utils.shrinkage_rank(D_new - U_old, lambdaD/rho))
+        J_new = np.real(utils.shrinkage_rank(D_old - U_old, lambdaD/rho))
          ## ========= update U ==============================
-        U_new = U_old + J_new - D_new
+        U_new = U_old + J_new - D_old
         ## ========= check stop ==============================
-        r = J_new - D_new
+        r = J_new - D_old
         s = rho*(J_new - J_old)
         r_eps = LA.norm(r, 'fro')
         s_eps = LA.norm(s, 'fro')
@@ -207,7 +205,7 @@ def min_rank_dict(Y, X, lambdaD, Dinit, iterations = 100, tol = 1e-8):
             rho = rho/tau
     return D_new
 
-#     def
+
 class Fista(object):
     def __init__(self):
         """
@@ -217,8 +215,11 @@ class Fista(object):
         self._calc_f = None
         self.lossF = None
         self.lambd = None
+        self.D = None
+        self.Y = None
+        self.L = None
 
-    def solve(self, Xinit = None, iterations = 100, tol = 1e-8, verbose = False):
+    def solve(self, Xinit=None, iterations=100, tol=1e-8, verbose=False):
         if Xinit is None:
             Xinit = np.zeros((self.D.shape[1], self.Y.shape[1]))
         Linv = 1/self.L
@@ -242,6 +243,12 @@ class Fista(object):
                 print('iter \t%d/%d, loss \t %4.4f'%(it + 1, iterations, self.lossF(x_new)))
         return x_new
 
+    def _grad(self, y):
+        raise NotImplementedError
+
+    def lossF(self, x):
+        raise NotImplementedError
+
     def check_grad(self, X):
         grad1 = self._grad(X)
         grad2 = num_grad(self._calc_f, X)
@@ -251,7 +258,7 @@ class Fista(object):
 
 class Lasso(Fista):
     """
-    Solving a Lasso problem using FISTA
+    Solving a Lasso optimization problem using FISTA
     `X, = arg min_X 0.5*||Y - DX||_F^2 + lambd||X||_1
         = argmin_X f(X) + lambd||X||_1
         F(x) = f(X) + lamb||X||_1
@@ -270,7 +277,7 @@ class Lasso(Fista):
         self.DtY = np.dot(self.D.T, self.Y)
         if Xinit is None:
             Xinit = np.zeros((self.D.shape[1], self.Y.shape[1]))
-        self.coef_ = self.solve(Xinit = Xinit, iterations = iterations)
+        self.coef_ = self.solve(Xinit=Xinit, iterations=iterations)
 
     def _grad(self, X):
         return np.dot(self.DtD, X) - self.DtY
@@ -280,20 +287,3 @@ class Lasso(Fista):
 
     def lossF(self, X):
         return self._calc_f(X) + self.lambd*utils.norm1(X)
-
-
-def _test_lasso():
-    d = 3
-    N = 7
-    k = 7
-    Y = utils.normc(np.random.rand(d, N))
-    D = utils.normc(np.random.rand(d, k))
-    l = Lasso(D, lambd = .01)
-    l.fit(Y)
-    l.check_grad(np.random.randn(D.shape[1], Y.shape[1]))
-    X = l.solve(verbose = True)
-    print(X)
-
-
-if __name__ == '__main__':
-    _test_lasso()
