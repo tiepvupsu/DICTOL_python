@@ -6,3 +6,4 @@ setup.py
 dist/
 dictol.egg-info/
 build/
+.vscode
