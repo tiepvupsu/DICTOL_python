@@ -50,9 +50,9 @@ class _UpdateXX0(optimize.Fista):
         Y_0 = utils.buildMhat(DtY, self.D_range, self.Y_range)
         g = np.dot(self.Dhat, X) - Y_0 + utils.buildM_2Mbar(X, self.Y_range, self.lambd2)
         if self.k0 > 0:
-            g0 = np.dot(self.A, X0) - self.D0tY2 \
-                + np.dot(self.D0tD, utils.buildMhat(X, self.D_range, self.Y_range)) \
-                - self.lambd2*utils.build_mean_matrix(X0)
+            g0 = np.dot(self.A, X0) - self.D0tY2 +\
+                np.dot(self.D0tD, utils.buildMhat(X, self.D_range, self.Y_range)) -\
+                self.lambd2*utils.build_mean_matrix(X0)
             return np.vstack((g, g0))
         return g
 

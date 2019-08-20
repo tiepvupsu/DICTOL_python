@@ -22,11 +22,6 @@ def vec(A):
     return A.flatten(1)
 
 
-def myreshape(x, c, r):
-    # TODO: remove this function?
-    return x.reshape(c, r, order='F').copy()
-
-
 def label_to_range(label):
     """
     Convert label to range
@@ -262,11 +257,10 @@ class MyForm:
         """
         return M*x (matrix vector multiplication)
         """
-        X = myreshape(x, self.M.shape[1], self.k)
+        X = x.reshape(self.M.shape[1], self.k, order='F')
         p = np.dot(self.N, X).sum(axis=1)
 
         return vec(np.dot(self.M, X)) + vec(np.tile(p, (1, self.k)))
-
 
 
 def randperm(n):
@@ -521,6 +515,7 @@ def erase_diagonal(A):
 
 
 def erase_diagonal_blocks(A, row_range, col_range):
+    """ remove diagonal blocks of the block matrix A """
     if len(row_range) != len(col_range):
         print('no. of column blocks != no. of row blocks!!')
     C = len(row_range) - 1

@@ -42,5 +42,16 @@ def mini_test_unit():
     src.evaluate(Y_test, label_test)
 
 
+def test_unit():
+    print('\n================================================================')
+    print('Mini Unit test: Sparse Representation-based Classification (SRC)')
+    dataset = 'myYaleB'
+    N_train = 15
+    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    src = SRC(lamb=0.01)
+    src.fit(Y_train, label_train)
+    src.evaluate(Y_test, label_test)
+
+
 if __name__ == '__main__':
     mini_test_unit()

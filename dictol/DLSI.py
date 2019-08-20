@@ -14,11 +14,10 @@ class DLSI(base.BaseModel):
         self.updateD_iters = updateD_iters
         self.updateX_iters = updateX_iters
 
-    def fit(self, Y, label_train, iterations = 100, verbose = False, show_after = 10):
+    def fit(self, Y, label_train, iterations=100, verbose=False, show_after=10):
         self.Y = Y
-        del Y
         self.Y_range = utils.label_to_range(label_train)
-        self.num_classes = len(self.Y_range) - 1 
+        self.num_classes = len(self.Y_range) - 1
         self.D_range = [self.k * i for i in range(self.num_classes + 1)]
         self.D = np.zeros((self.Y.shape[0], self.D_range[-1]))
         self.X = []
@@ -31,15 +30,15 @@ class DLSI(base.BaseModel):
 
         self._initialize()
         if verbose:
-            print('initial loss = %.4f'%self.loss())
+            print('initial loss = %.4f' % self.loss())
 
         for it in range(iterations):
             # update X
             self._updateX()
             # update D
             self._updateD()
-            if verbose and (it == 0 or (it+1)%show_after == 0):
-                print('iter \t %3d/%d \t loss \t %.4f'%(it + 1, iterations, self.loss()))
+            if verbose and (it == 0 or (it+1) % show_after == 0):
+                print('iter \t %3d/%d \t loss \t %.4f' % (it + 1, iterations, self.loss()))
 
     def _getYc(self, c):
         return utils.get_block_col(self.Y, c, self.Y_range)
@@ -50,7 +49,7 @@ class DLSI(base.BaseModel):
     def _initialize(self):
         for c in range(self.num_classes):
             Yc = utils.get_block_col(self.Y, c, self.Y_range)
-            clf = ODL(k = self.D_range[c+1] - self.D_range[c], lambd = self.lambd)
+            clf = ODL(k=self.D_range[c+1] - self.D_range[c], lambd=self.lambd)
             clf.fit(Yc)
             self.D[:, self.D_range[c]: self.D_range[c+1]] = clf.D
             self.X[c] = clf.X
