@@ -1,19 +1,12 @@
-
+import os
 import math
-# import sys
 import time
 from time import strftime
 import numpy as np
 import numpy.linalg as LA
-# from six.moves import cPickle as pickle
-import os
-# import io
 import scipy.io as sio
 import pkg_resources
-# import pickle
-# from ODL import *
-test = True
-# test = False
+
 
 def repmat(A, rows, cols):
     """
@@ -23,6 +16,7 @@ def repmat(A, rows, cols):
     :return:
     """
     return np.tile(A, (cols, rows)).T
+
 
 def vec(A):
     """
@@ -34,12 +28,15 @@ def vec(A):
     # return A.reshape((-1, 1), order = 'F')
     return A.flatten(1)
 
+
 def get_time_str():
     print('Time now: ' + strftime("%m/%d/%Y %H:%M:%S"))
     return strftime("%m%d_%H%M%S")
 
+
 def myreshape(x, c, r):
-    return x.reshape(c, r, order = 'F').copy()
+    return x.reshape(c, r, order='F').copy()
+
 
 def label_to_range(label):
     """
@@ -57,13 +54,6 @@ def label_to_range(label):
         arange[i+1] = cumsum
     return arange
 
-def label_to_range_test():
-    label = np.array([1, 1, 1, 2, 2, 2, 2, 3, 3])
-    print("---------------------------------------\nLabel_to_range test:")
-    print("label = ", label)
-    print("range = ", label_to_range(label))
-    # ouput should be [0, 3, 7, 9]
-    # pass
 
 def range_to_label(arange):
     """
