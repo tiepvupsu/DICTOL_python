@@ -7,3 +7,4 @@ dist/
 dictol.egg-info/
 build/
 .vscode
+main.py
