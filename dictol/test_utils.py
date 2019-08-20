@@ -39,14 +39,48 @@ class TestRangeToLabel(object):
         pass
 
 
-def test_get_block_col():
-    # TODO
-    pass
+
+class TestGetBlockCol(object):
+    def test_1(self):
+        matrix = np.array([[1, 2, 3, 4, 5],
+                           [1, 2, 3, 4, 5]])
+        block_indices = 1
+        col_range = [0, 2, 4, 5]
+        expected_array = np.array([[3, 4],
+                                   [3, 4]])
+        got_array = utils.get_block_col(matrix, block_indices, col_range)
+        np.testing.assert_array_equal(expected_array, got_array)
+
+        block_indices = [0, 2]
+        expected_array = np.array([[1, 2, 5],
+                                   [1, 2, 5]])
+        got_array = utils.get_block_col(matrix, block_indices, col_range)
+        np.testing.assert_array_equal(expected_array, got_array)
 
 
-def test_get_block_row():
-    # TODO
-    pass
+class TestGetBlockRow(object):
+    def test_1(self):
+        matrix = np.array([[1, 1],
+                           [2, 2],
+                           [3, 3],
+                           [4, 4],
+                           [5, 5],
+                           [6, 6]])
+        block_indices = 1
+        row_range = [0, 2, 5, 6]
+        expected_array = np.array([[3, 3],
+                                   [4, 4],
+                                   [5, 5]])
+        got_array = utils.get_block_row(matrix, block_indices, row_range)
+        np.testing.assert_array_equal(expected_array, got_array)
+
+        block_indices = [0, 2]
+        expected_array = np.array([[1, 1],
+                                   [2, 2],
+                                   [6, 6]])
+        got_array = utils.get_block_row(matrix, block_indices, row_range)
+        np.testing.assert_array_equal(expected_array, got_array)
+
 
 
 def test_get_block():

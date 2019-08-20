@@ -87,45 +87,57 @@ def range_to_label(a_range):
     return res
 
 
-def get_block_col(M, C, col_range):
+def get_block_row(matrix, block_indices, row_range):
     """
-    * Syntax: `Mc = get_block_col(M, c, col_range)`
-    * Extract a block of columns from a matrix.
-        - `M`: the big matrix `M = [M_1, M_2, ...., M_C]`.
-        - `C`: blocks indices (start at 0).
-        - `col_range`: range of samples, see `Y_range` and `D_range` above.
-    * Example: `M` has 25 columns and `col_range = [0, 10, 25]`, then
-    `get_block_col(M, 1, col_range)` will output the first block of `M`,
-    i.e. `M(:, 1:10)`.
+    Extract a subset of rows from a matrix
+
+    Parameters:
+    -----------
+    matrix: 2-d numpy array
+        block matrix
+    block_indices: integer of list of integers
+        indices of extracted blocks, 0-indexed. If indices is a list, return
+        the concatenation of all blocks
+    row_range: list of intergers
+        in the form of [0, c_1, c_1 + c_2, ..., c_1 + c_2 + ... + c_N]
+        where c_i is the number of rows in the i-th block
+
+    Returns:
+    --------
+    a 2-d matrix
     """
-    if isinstance(C, int):
-        return M[:, col_range[C]: col_range[C+1]]
-    if isinstance(C, list) or isinstance(C, (np.ndarray, np.generic)):
-        ids = []
-        for c in C:
-            ids = ids + list(range(col_range[c], col_range[c+1]))
-        return M[:, ids]
+    assert matrix.ndim == 2, 'Expect to receive 2-d array input, got shape {}'.format(matrix.shape)
+    if isinstance(block_indices, int):
+        block_indices = [block_indices]
+    # if isinstance(block_indices, (list, np.ndarray, np.generic))
+    ids = []
+    for i in block_indices:
+        ids = ids + list(range(row_range[i], row_range[i+1]))
+    return matrix[ids, :].copy()
 
 
-def get_block_row(M, C, row_range):
+def get_block_col(matrix, block_indices, col_range):
     """
-    * Extract a block of rows from a matrix.
-    * Syntax: `Mc = get_block_row(M, c, row_range)`
-        - `M`: the big matrix `M = [M_1; M_2; ....; M_C]`.
-        - `C`: an `int`, `list` of ints or an nparray of ints
-            block indices (start at 0).
-        - `row_range`: range of samples, see `Y_range` and `D_range` above.
-    * Example: `M` has 40 rows and `row_range = [0, 10, 25, 40]`, then
-    `get_block_row(M, 2, row_range)` will output the second block of `M`,
-    i.e. `M(11:25, :)`.
+    Extract a subset of columns from a matrix
+
+    Parameters:
+    -----------
+    matrix: 2-d numpy array
+        block matrix
+    block_indices: integer of list of integers
+        indices of extracted blocks, 1-indexed. If indices is a list, return
+        the concatenation of all blocks
+    row_range: list of intergers
+        in the form of [0, c_1, c_1 + c_2, ..., c_1 + c_2 + ... + c_N]
+        where c_i is the number of columns in the i-th block
+
+    Returns:
+    --------
+    a 2-d matrix
     """
-    if isinstance(C, int):
-        return M[row_range[C]: row_range[C+1], :].copy()
-    if isinstance(C, list) or isinstance(C, (np.ndarray, np.generic)):
-        ids = []
-        for c in C:
-            ids = ids + list(range(row_range[c], row_range[c+1]))
-        return M[ids, :].copy()
+    assert matrix.ndim == 2, 'Expect to receive 2-d array input, got shape {}'.format(matrix.shape)
+    assert matrix.shape[1] == col_range[-1]
+    return get_block_row(matrix.T, block_indices, col_range).T
 
 
 def get_block(M, i, j, row_range, col_range):
