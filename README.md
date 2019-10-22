@@ -33,12 +33,3 @@ import dictol
 dictol.demo()
 ```
 
-
-
-# Contact information
-```
-Tiep Vu: 
-    + vuhuutiep@gmail.com 
-    + http://www.personal.psu.edu/thv102/
-```
-
