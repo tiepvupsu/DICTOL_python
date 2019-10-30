@@ -121,7 +121,7 @@ def test_unit():
     print('\n===================================================================')
     print('Unit test: DLSI')
     dataset = 'myYaleB'
-    N_train = 5
+    N_train = 15
     Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
     clf = DLSI(k=10, lambd=0.001, eta=0.001)
     clf.fit(Y_train, label_train, iterations=100, verbose=True)
