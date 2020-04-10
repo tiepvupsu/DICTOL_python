@@ -16,10 +16,11 @@ If you experience any bugs, please let me know via the [**Issues**](https://gith
 
 For more information, please see its corresponding [**MATLAB version**](https://github.com/tiepvupsu/DICTOL).
 
-# Packages required
-
-1. numpy 
-2. scipy 
+# Requirements
+```
+numpy==1.17.4
+scipy==1.4.1
+```
 
 # Installation
 ```
