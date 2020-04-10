@@ -44,7 +44,7 @@ def mini_test_unit():
 
 def test_unit():
     print('\n================================================================')
-    print('Mini Unit test: Sparse Representation-based Classification (SRC)')
+    print('Unit test: Sparse Representation-based Classification (SRC)')
     dataset = 'myYaleB'
     N_train = 15
     Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
