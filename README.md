@@ -21,12 +21,13 @@ For more information, please see its corresponding [**MATLAB version**](https://
 1. numpy 
 2. scipy 
 
-
-# Installation 
+# Installation
 ```
-pip install dictol
+git clone https://github.com/tiepvupsu/DICTOL_python
+cd DICTOL_python
 ```
-# Demo 
+ 
+# Testing
 
 ```
 import dictol
