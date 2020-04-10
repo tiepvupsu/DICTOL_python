@@ -8,7 +8,7 @@ _This repo is a part of our [LRSDL project](http://signal.ee.psu.edu/lrsdl.html)
 
 2. Tiep H. Vu, Vishal Monga. "Fast Low-rank Shared Dictionary Learning for Image Classification." *IEEE Transactions on Image Processing* 26.11(2017):5160-5175 [[paper]](https://arxiv.org/pdf/1610.08606.pdf). 
 
-**Author: [Tiep Vu](http://www.personal.psu.edu/thv102/)**
+**Author: [Tiep Vu](https://www.linkedin.com/in/tiephuuvu/)**
 
 _This repository contains the following methods: SRC, ODL, DLSI, FDDL, COPAR, LRSDL_
 
@@ -30,6 +30,7 @@ cd DICTOL_python
  
 # Testing
 
+Inside python:
 ```
 import dictol
 dictol.demo()
