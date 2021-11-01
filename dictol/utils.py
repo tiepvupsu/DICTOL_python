@@ -180,7 +180,12 @@ def normc(A):
     """
     normalize each column of A to have norm2 = 1
     """
-    return A / np.tile(np.sqrt(np.sum(A*A, axis=0)), (A.shape[0], 1))
+    with np.errstate(divide='ignore', invalid='ignore'): ## To fix divide by zero and nan/inf
+        result = A / np.tile(np.sqrt(np.sum(A*A, axis=0)), (A.shape[0], 1))
+        result[result == np.inf] = 0
+        result[result == np.nan] = 0
+        result = np.nan_to_num(result)
+    return result
 
 
 def nuclearnorm(X):
@@ -278,6 +283,8 @@ def pickDfromY(Y, Y_range, D_range):
     """
     randomly pick k_c samples from Y_c
     """
+    #print(type(Y_range))
+    #Y_range = np.array(Y_range)
     C = Y_range.size - 1
     D = np.zeros((Y.shape[0], D_range[-1]))
     for c in range(C):
@@ -297,13 +304,16 @@ def load_mat(filename):
 def picl_train_test(dataset, N_train_c):
     data_fn = pkg_resources.resource_filename('dictol', 'data/'+dataset + '.mat') 
     vars_dict = load_mat(data_fn)
+    #print(vars_dict)
     Y = vars_dict['Y']
     d = Y.shape[0]
     if 'Y_range' not in vars_dict:
         Y_range = label_to_range(vars_dict['label'].flatten(1)).astype(int)
-
     else:
+        #print(vars_dict['Y_range'])
         Y_range = vars_dict['Y_range'].flatten(1).astype(int)
+        #print(Y_range)
+        
 
     C = Y_range.size - 1
     N_total     = Y_range[-1]
@@ -370,10 +380,9 @@ def train_test_split(dataset, N_train):
         vars_dict = load_mat(fn)
         Y_train = vars_dict['Y_train']
         Y_test = vars_dict['Y_test']
-        label_train = vec(vars_dict['label_train']).astype(int)
-        label_test = vec(vars_dict['label_test']).astype(int)
-        range_train = label_to_range(label_train)
-        # range_test  = label_to_range(label_test)
+        label_train = vec(vars_dict['label_train'].astype(int))
+        label_test = vec(vars_dict['label_test'].astype(int))
+        range_train = np.array(label_to_range(label_train))
 
         new_range_train = N_train * np.arange(N_train + 1)
         Y_train         = pickDfromY(Y_train, range_train, new_range_train)
@@ -382,25 +391,17 @@ def train_test_split(dataset, N_train):
         Y_train = normc(Y_train)
         Y_test  = normc(Y_test)
 
-    elif dataset == 'myARreduce':
-        fn = os.path.join('data', 'AR_EigenFace.pickle')
-        vars_dict = load_mat(fn)
 
-        Y_train     = normc(vars_dict['tr_dat'])
-        Y_test      = normc(vars_dict['tt_dat'])
-        label_train = vec(vars_dict['trls']).astype(int)
-        label_test  = vec(vars_dict['ttls']).astype(int)
-
-    elif dataset == 'myFlower':
-        dataset = 'myFlower102'
-        fn      = os.path.join('data', dataset + '.pickle')
+    elif dataset in ['myFlower101', 'myFlower102', 'myFlower103']:
+        #fn      = os.path.join('data', dataset + '.pickle')
+        fn = pkg_resources.resource_filename('dictol', 'data/'+dataset + '.mat')
         vars_dict    = load_mat(fn)
 
         Y_train     = vars_dict['Y_train']
         Y_test      = vars_dict['Y_test']
         label_train = vec(vars_dict['label_train'])
         label_test  = vec(vars_dict['label_test'])
-        range_train = label_to_range(label_train)
+        range_train = np.array(label_to_range(label_train))
         num_classes = len(range_train) - 1
         new_range_train = N_train * np.arange(num_classes + 1)
         label_train = range_to_label(new_range_train)

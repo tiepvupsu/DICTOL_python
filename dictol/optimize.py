@@ -222,6 +222,8 @@ class Fista(object):
     def solve(self, Xinit=None, iterations=100, tol=1e-8, verbose=False):
         if Xinit is None:
             Xinit = np.zeros((self.D.shape[1], self.Y.shape[1]))
+        if self.L == 0: ### To fix divide-by-zero error
+            self.L = 1
         Linv = 1/self.L
         lambdaLiv = self.lambd/self.L
         x_old = Xinit.copy()
@@ -270,6 +272,7 @@ class Lasso(Fista):
         self.Y = None
         self.DtY = None
         self.L = np.max(LA.eig(self.DtD)[0])
+        #print(self.L)
         self.coef_ = None
 
     def fit(self, Y, Xinit = None, iterations = 100):
